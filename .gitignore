@@ -1,0 +1,6 @@
+*.pyc
+.*
+!.gitignore
+/dist/
+/notpil.egg-info/
+/build/
