@@ -22,9 +22,16 @@ def flip_top_bottom(source, target):
     # return target
     return target
 
-def _fliprow(iterable, pixelsize):
-    tmp = deque(maxlen=pixelsize)
-    for i, x in enumerate(reversed(iterable), 1):
+def _fliprow(row, pixelsize):
+    """
+    "flips" a row of pixels (row).
+    
+    with row being [1,2,3, 4,5,6, 7,8,9] and pixelsize 3 this will return an
+    iterator which, if cast to a list is [7,8,9, 4,5,6, 1,2,3] (spaces added
+    for readability)
+    """
+    tmp = deque()
+    for i, x in enumerate(reversed(row), 1):
         tmp.append(x)
         if not i % pixelsize:
             while tmp:

@@ -25,6 +25,7 @@ class Image(object):
         return cls(width, height, pixels, format)
 
     def resize(self, width, height):
+        raise NotImplementedError()
         target = Image.empty(width, height, self.mode)
         incubator_geometry.resize(target, self, incubator_geometry.nearest_filter)
         return target
