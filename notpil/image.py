@@ -2,7 +2,8 @@
 from notpil.colors import WHITE
 from notpil.exceptions import FormatNotSupported
 from notpil.formats import get_format
-from notpil.incubator import geometry
+from notpil.incubator import geometry as incubator_geometry
+from notpil.operations import geometry
 
 class Image(object):
     def __init__(self, width, height, pixels, mode):
@@ -23,12 +24,12 @@ class Image(object):
 
     def resize(self, width, height):
         target = Image.empty(width, height, self.mode)
-        geometry.resize(target, self, geometry.nearest_filter)
+        incubator_geometry.resize(target, self, incubator_geometry.nearest_filter)
         return target
     
     def flip_vertically(self):
         target = Image.empty(self.width, self.height, self.mode)
-        geometry.flip_top_bottom(target, self)
+        geometry.flip_vertically(self, target)
         return target
     
     def save(self, fileobj, format):
