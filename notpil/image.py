@@ -36,9 +36,7 @@ class Image(object):
         return target
     
     def flip_left_right(self):
-        target = Image.empty(self.width, self.height, self.mode)
-        geometry.flip_left_right(self, target)
-        return target
+        return geometry.flip_left_right(self, Image)
 
     def save(self, fileobj, format):
         format_object = get_format(format)

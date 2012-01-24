@@ -31,24 +31,24 @@ def _fliprow(row, pixelsize):
     for readability)
     """
     tmp = deque()
+    append = tmp.append
+    pop = tmp.pop
     for i, x in enumerate(reversed(row), 1):
-        tmp.append(x)
+        append(x)
         if not i % pixelsize:
             while tmp:
-                yield tmp.pop()
+                yield pop()
 
-def flip_left_right(source, target):
+def flip_left_right(source, cls):
     """
     Horizontally flips the pixels of source into target
     """
-    # check mode match
-    check_mode(source, target)
-    # check size match
-    check_size(source, target)
-    # copy palette
-    copy_info(source, target)
+    target = cls(source.width, source.height, [], source.mode)
     
-    for index, line in enumerate(source.pixels):
-        target.pixels[index] = array.array('B', _fliprow(line, source.pixelsize))
+    append = target.pixels.append
+    pixelsize = source.pixelsize
+    
+    for line in source.pixels:
+        append(array.array('B', _fliprow(line, pixelsize)))
     
     return target
