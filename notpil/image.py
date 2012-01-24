@@ -12,7 +12,7 @@ class Image(object):
         self.pixels = pixels
         self.mode = mode
         self.pixelsize = self.mode.length
-        
+
         # hacks
         self.palette = None
         self.image = self.pixels
@@ -26,14 +26,18 @@ class Image(object):
         target = Image.empty(width, height, self.mode)
         incubator_geometry.resize(target, self, incubator_geometry.nearest_filter)
         return target
-    
+
     def flip_vertically(self):
         target = Image.empty(self.width, self.height, self.mode)
         geometry.flip_vertically(self, target)
         return target
-    
+
     def save(self, fileobj, format):
         format_object = get_format(format)
         if not format_object:
             raise FormatNotSupported(format)
         format_object.save(self, fileobj)
+
+    def save_to_path(self, filepath, format):
+        with open(filepath, 'wb') as fobj:
+            self.save(fobj, format)
