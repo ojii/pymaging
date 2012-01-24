@@ -93,7 +93,7 @@ def flip_top_bottom(imageout, imagein):
 #    for (y = 0; y < imIn->ysize; y++, yr--)
     for y in range(0, imagein.height):
 #    memcpy(imOut->image[yr], imIn->image[y], imIn->linesize);
-        imageout.image[yr] = deepcopy(imagein.image[y])
+        imageout.pixels[yr] = deepcopy(imagein.pixels[y])
         yr -= 1
 #
 #    ImagingSectionLeave(&cookie); NOOP!

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from notpil.colors import WHITE
+from notpil.exceptions import FormatNotSupported
+from notpil.formats import get_format
 from notpil.incubator import geometry
 
 class Image(object):
@@ -23,3 +25,14 @@ class Image(object):
         target = Image.empty(width, height, self.mode)
         geometry.resize(target, self, geometry.nearest_filter)
         return target
+    
+    def flip_vertically(self):
+        target = Image.empty(self.width, self.height, self.mode)
+        geometry.flip_top_bottom(target, self)
+        return target
+    
+    def save(self, fileobj, format):
+        format_object = get_format(format)
+        if not format_object:
+            raise FormatNotSupported(format)
+        format_object.save(self, fileobj)

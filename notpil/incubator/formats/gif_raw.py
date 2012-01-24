@@ -44,6 +44,10 @@ class ImageLoaderGIF(object):
         return ('gif', )
 
     def load(self, fileobj):
+        format = fileobj.read(6)
+        fileobj.seek(0)
+        if format not in KNOWN_FORMATS:
+            return None
         im = GifDecoder(fileobj.read())
 
         img_data = []

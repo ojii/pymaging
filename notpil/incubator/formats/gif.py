@@ -2,5 +2,11 @@
 from notpil.incubator.formats.gif_raw import ImageLoaderGIF
 
 
-def load_gif(fileobj):
-    return ImageLoaderGIF().load(fileobj)
+class GIF:
+    @staticmethod
+    def open(fileobj):
+        return ImageLoaderGIF().load(fileobj)
+        
+    @staticmethod
+    def save(image, fileobj):
+        raise NotImplementedError()
