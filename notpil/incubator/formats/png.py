@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from notpil.colors import RGBA
-from notpil.incubator.formats.png_raw import Writer
 from itertools import chain
+from notpil.colors import RGBA, RGB
+from notpil.image import Image
+from notpil.incubator.formats.png_raw import Writer, Reader, FormatError
 
 def flat_pixels_iter(pixels):
     for row in pixels:
@@ -10,8 +11,15 @@ def flat_pixels_iter(pixels):
 class PNG:
     @staticmethod
     def open(fileobj):
-        raise NotImplementedError()
-    
+        reader = Reader(file=fileobj)
+        try:
+            width, height, pixels, metadata = reader.read()
+        except FormatError:
+            fileobj.seek(0)
+            return None
+        # TODO: Should we really `list` pixels here?
+        return Image(width, height, list(pixels), RGBA if metadata.get('alpha', False) else RGB)
+
     @staticmethod
     def save(image, fileobj):
         writer = Writer(
@@ -19,4 +27,4 @@ class PNG:
             height=image.height,
             alpha=image.mode is RGBA
         )
-        writer.write_packed(fileobj, flat_pixels_iter(image.pixels))
+        writer.write(fileobj, image.pixels)
