@@ -30,6 +30,8 @@ def _fliprow(row, pixelsize):
     iterator which, if cast to a list is [7,8,9, 4,5,6, 1,2,3] (spaces added
     for readability)
     """
+    arr = array.array('B')
+    arrappend = arr.append
     tmp = deque()
     append = tmp.append
     pop = tmp.pop
@@ -37,8 +39,9 @@ def _fliprow(row, pixelsize):
         append(x)
         if not i % pixelsize:
             while tmp:
-                yield pop()
-
+                arrappend(pop())
+    return arr
+                
 def flip_left_right(source, cls):
     """
     Horizontally flips the pixels of source into target
@@ -49,6 +52,6 @@ def flip_left_right(source, cls):
     pixelsize = source.pixelsize
     
     for line in source.pixels:
-        append(array.array('B', _fliprow(line, pixelsize)))
+        append(_fliprow(line, pixelsize))
     
     return target
