@@ -43,6 +43,6 @@ def flip_left_right(source, cls):
     """
     Horizontally flips the pixels of source into target
     """
-    flipper = Fliprow(source.width, source.pixelsize)
+    flipper = Fliprow(source.width * source.pixelsize, source.pixelsize)
     target = cls(source.width, source.height, [flipper.flip(line) for line in source.pixels], source.mode)
     return target
