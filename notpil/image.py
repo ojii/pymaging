@@ -52,7 +52,7 @@ class Image(object):
     # Geometry Operations 
     #==========================================================================
 
-    def resize(self, width, height, algorithm=Nearest):
+    def resize(self, width, height, algorithm):
         raise NotImplementedError()
         target = Image.empty(width, height, self.mode)
         incubator_geometry.resize(target, self, incubator_geometry.nearest_filter)
