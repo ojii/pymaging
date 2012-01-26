@@ -21,7 +21,7 @@ class Image(object):
     #==========================================================================
     
     @classmethod
-    def open_image(cls, fileobj):
+    def open(cls, fileobj):
         for format in get_format_objects():
             image = format.open(fileobj)
             if image:
@@ -29,7 +29,7 @@ class Image(object):
         raise FormatNotSupported()
 
     @classmethod
-    def open_image_from_path(cls, filepath):
+    def open_from_path(cls, filepath):
         with open(filepath, 'rb') as fobj:
             return cls.open_image(fobj)
         
