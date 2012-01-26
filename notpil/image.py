@@ -30,7 +30,7 @@ class Image(object):
     @classmethod
     def open_from_path(cls, filepath):
         with open(filepath, 'rb') as fobj:
-            return cls.open_image(fobj)
+            return cls.open(fobj)
         
     #==========================================================================
     # Saving 
