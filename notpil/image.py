@@ -4,6 +4,7 @@ from notpil.exceptions import FormatNotSupported
 from notpil.formats import get_format
 from notpil.incubator import geometry as incubator_geometry
 from notpil.operations import geometry
+from notpil.utils import get_pixel
 import array
 import os
 
@@ -31,12 +32,16 @@ class Image(object):
         return target
 
     def flip_top_bottom(self):
-        target = Image.empty(self.width, self.height, self.mode)
-        geometry.flip_top_bottom(self, target)
-        return target
+        return geometry.flip_top_bottom(self, Image)
     
     def flip_left_right(self):
         return geometry.flip_left_right(self, Image)
+    
+    def crop(self, width, height, padding_top, padding_left):
+        return geometry.crop(self, width, height, padding_top, padding_left, Image)
+    
+    def get_color(self, x, y):
+        return get_pixel(self.pixels, self.pixelsize, x, y)
 
     def save(self, fileobj, format):
         format_object = get_format(format)

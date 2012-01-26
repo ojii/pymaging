@@ -9,3 +9,12 @@ def read_raw_pixels(format, pixels):
 
 def flat_to_nested(flatpixels, width):
     return [flatpixels[i*width:(i+1)*width] for i in range(len(flatpixels) / width)]
+
+def get_pixel(pixels, pixelsize, x, y):
+    """
+    Get the pixel in an image.
+    This returns a list of values, which depend on your mode.
+    """
+    line = pixels[y]
+    start = x * pixelsize
+    return line[start:start+pixelsize]

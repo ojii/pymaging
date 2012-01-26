@@ -1,26 +1,18 @@
 # -*- coding: utf-8 -*-
-from notpil.operations.utils import copy_info, check_mode, check_size
 import array
 from collections import deque
 
 
-def flip_top_bottom(source, target):
+def flip_top_bottom(source, cls):
     """
     Vertically flips the pixels of source into target 
     """
-    # check mode match
-    check_mode(source, target)
-    # check size match
-    check_size(source, target)
-    # copy palette
-    copy_info(source, target)
-
-    # copy pixels reversed (y axis)
-    for index, line in enumerate(reversed(source.pixels)):
-        target.pixels[index] = array.array(line.typecode, line)
-
-    # return target
-    return target
+    return cls(
+        source.width,
+        source.height,
+        [array.array(line.typecode, line) for line in reversed(source.pixels)],
+        source.mode
+    )
 
 
 class Fliprow(object):
@@ -46,3 +38,13 @@ def flip_left_right(source, cls):
     flipper = Fliprow(source.width * source.pixelsize, source.pixelsize)
     target = cls(source.width, source.height, [flipper.flip(line) for line in source.pixels], source.mode)
     return target
+
+def crop(source, width, height, padding_top, padding_left, cls):
+    linestart = padding_left * source.pixelsize
+    lineend = linestart + (width * source.pixelsize)
+    return cls(
+        width,
+        height,
+        [line[linestart:lineend] for line in source.pixels[padding_top:padding_top + height]],
+        source.mode
+    )
