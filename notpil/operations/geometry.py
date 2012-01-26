@@ -22,36 +22,27 @@ def flip_top_bottom(source, target):
     # return target
     return target
 
-def _fliprow(row, pixelsize):
-    """
-    "flips" a row of pixels (row).
+
+class Fliprow(object):
+    def __init__(self, rowlength, pixelsize):
+        self.indices = deque()
+        indicesappend = self.indices.append
+        tmp = deque()
+        append = tmp.append
+        pop = tmp.pop
+        for i in range(rowlength - 1, -1, -1):
+            append(i)
+            if not i % pixelsize:
+                while tmp:
+                    indicesappend(pop())
     
-    with row being [1,2,3, 4,5,6, 7,8,9] and pixelsize 3 this will return an
-    iterator which, if cast to a list is [7,8,9, 4,5,6, 1,2,3] (spaces added
-    for readability)
-    """
-    arr = array.array('B')
-    arrappend = arr.append
-    tmp = deque()
-    append = tmp.append
-    pop = tmp.pop
-    for i, x in enumerate(reversed(row), 1):
-        append(x)
-        if not i % pixelsize:
-            while tmp:
-                arrappend(pop())
-    return arr
+    def flip(self, row):
+        return array.array('B', (row[i] for i in self.indices))
                 
 def flip_left_right(source, cls):
     """
     Horizontally flips the pixels of source into target
     """
-    target = cls(source.width, source.height, [], source.mode)
-    
-    append = target.pixels.append
-    pixelsize = source.pixelsize
-    
-    for line in source.pixels:
-        append(_fliprow(line, pixelsize))
-    
+    flipper = Fliprow(source.width, source.pixelsize)
+    target = cls(source.width, source.height, [flipper.flip(line) for line in source.pixels], source.mode)
     return target
