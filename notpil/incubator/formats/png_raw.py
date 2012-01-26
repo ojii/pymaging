@@ -169,7 +169,9 @@ __version__ = "$URL$ $Rev$"
 
 from array import array
 try: # See :pyver:old
-    import itertools
+    from itertools import imap as map
+    def next(obj):
+        return obj.next()
 except:
     pass
 import math
@@ -200,7 +202,7 @@ _adam7 = ((0, 0, 8, 8),
 def group(s, n):
     # See
     # http://www.python.org/doc/2.6/library/functions.html#zip
-    return zip(*[iter(s)]*n)
+    return list(zip(*[iter(s)]*n))
 
 def isarray(x):
     """Same as ``isinstance(x, array)`` except on Python 2.2, where it
@@ -767,7 +769,7 @@ class Writer:
         # :todo: Certain exceptions in the call to ``.next()`` or the
         # following try would indicate no row data supplied.
         # Should catch.
-        i,row = enumrows.next()
+        i,row = next(enumrows)
         try:
             # If this fails...
             extend(row)
@@ -1617,7 +1619,7 @@ class Reader:
                 out.extend(map(lambda i: mask&(o>>i), shifts))
             return out[:width]
 
-        return itertools.imap(asvalues, rows)
+        return map(asvalues, rows)
 
     def serialtoflat(self, bytes, width=None):
         """Convert serial format (byte stream) pixel data to flat row
@@ -1860,7 +1862,8 @@ class Reader:
             while True:
                 try:
                     type, data = self.chunk()
-                except ValueError, e:
+                except ValueError:
+                    e = sys.exc_info()[1]
                     raise ChunkError(e.args[0])
                 if type == 'IEND':
                     # http://www.w3.org/TR/PNG/#11IEND
@@ -2331,7 +2334,7 @@ def topngbytes(name, rows, x, y, **k):
 
     import os
 
-    print name
+    print(name)
     f = BytesIO()
     w = Writer(x, y, **k)
     w.write(f, rows)
@@ -2495,7 +2498,7 @@ class Test(unittest.TestCase):
             candi = candidate.replace('n', 'i')
             if candi not in _pngsuite:
                 continue
-            print 'adam7 read', candidate
+            print('adam7 read', candidate)
             straight = Reader(bytes=_pngsuite[candidate])
             adam7 = Reader(bytes=_pngsuite[candi])
             # Just compare the pixels.  Ignore x,y (because they're
@@ -2730,7 +2733,7 @@ class Test(unittest.TestCase):
         try:
             import numpy
         except ImportError:
-            print >>sys.stderr, "skipping numpy test"
+            sys.stderr.write("skipping numpy test\n")
             return
 
         rows = [map(numpy.uint16, range(0,0x10000,0x5555))]
@@ -2742,7 +2745,7 @@ class Test(unittest.TestCase):
         try:
             import numpy
         except ImportError:
-            print >>sys.stderr, "skipping numpy test"
+            sys.stderr.write("skipping numpy test\n")
             return
 
         rows = [map(numpy.uint8, range(0,0x100,0x55))]
@@ -2754,7 +2757,7 @@ class Test(unittest.TestCase):
         try:
             import numpy
         except ImportError:
-            print >>sys.stderr, "skipping numpy test"
+            sys.stderr.write("skipping numpy test\n")
             return
 
         rows = [map(numpy.bool, [0,1])]
@@ -2765,7 +2768,7 @@ class Test(unittest.TestCase):
         try:
             import numpy
         except ImportError:
-            print >>sys.stderr, "skipping numpy test"
+            sys.stderr.write("skipping numpy test\n")
             return
 
         pixels = numpy.array([[0,0x5555],[0x5555,0xaaaa]], numpy.uint16)
@@ -3709,7 +3712,7 @@ def _main(argv):
         names = list(_pngsuite)
         names.sort()
         for name in names:
-            print name
+            print(name)
         return
 
     # Run regression tests
@@ -3781,5 +3784,6 @@ def _main(argv):
 if __name__ == '__main__':
     try:
         _main(sys.argv)
-    except Error, e:
-        print >>sys.stderr, e
+    except Error:
+        e = sys.exc_info()[1]
+        sys.stderr.write(e)

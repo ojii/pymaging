@@ -184,21 +184,6 @@ class Gif(object):
         size = struct.calcsize(format)
         return struct.unpack( format, self.pop(data, size) )
 
-    def print_info( self ):
-        '''prints out some useful info (..debug?)'''
-
-        print "Version: %s" % self.header
-        print "Logical screen width: %d" % self.ls_width
-        print "Logical screen height: %d" % self.ls_height
-        print "Flags: %s" % repr(self.flags)
-        print " "*6,"Color resolution: %d" % self.color_resolution
-        print " "*6,"Sort flag: %s" % str(self.sort_flag)
-        print " "*6,"Global color table flag: %s" % str(self.color_table_flag)
-        print " "*22,"...size: %d (%d bytes)" % \
-            (self.global_color_table_size, self.global_color_table_size * 3)
-        print "Background color: %d" % self.background_color
-        print "Aspect ratio info: %d" % self.aspect_ratio
-
     def new_image( self, header=None):
         '''adds a new image descriptor'''
         image = ImageDescriptor(self, header)
