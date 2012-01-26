@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from notpil.exceptions import FormatNotSupported
 from notpil.formats import get_format, get_format_objects
-from notpil.incubator import geometry as incubator_geometry
-from notpil.operations.geometry import Fliprow
+from notpil.helpers import Fliprow
 from notpil.utils import get_pixel
 import array
 import os
@@ -53,7 +52,7 @@ class Image(object):
     # Geometry Operations 
     #==========================================================================
 
-    def resize(self, width, height):
+    def resize(self, width, height, algorithm=Nearest):
         raise NotImplementedError()
         target = Image.empty(width, height, self.mode)
         incubator_geometry.resize(target, self, incubator_geometry.nearest_filter)
