@@ -1,4 +1,4 @@
-from notpil.api import open_image_from_path
+from notpil.image import Image
 
-open_image_from_path('testimage.png').flip_left_right().save_to_path('benchimage.png')
+Image.open_image_from_path('testimage.png').flip_left_right().save_to_path('benchimage.png')
 
