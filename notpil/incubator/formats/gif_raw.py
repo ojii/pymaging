@@ -23,7 +23,6 @@
 from array import array
 from notpil.colors import RGBA
 from notpil.image import Image
-from notpil.utils import read_raw_pixels, flat_to_nested
 import struct
 
 '''pygif: gif implementation in python

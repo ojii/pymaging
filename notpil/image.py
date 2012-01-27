@@ -8,12 +8,14 @@ import os
 
 
 class Image(object):
-    def __init__(self, width, height, pixels, mode):
+    def __init__(self, width, height, pixels, mode, palette=None):
         self.width = width
         self.height = height
         self.pixels = pixels
         self.mode = mode
-        self.pixelsize = self.mode.length
+        self.palette = palette
+        self.colorlength = self.mode.length
+        self.pixelsize = 1 if self.palette else self.colorlength
     
     #==========================================================================
     # Constructors
@@ -54,12 +56,9 @@ class Image(object):
 
     def resize(self, width, height, algorithm):
         raise NotImplementedError()
-        target = Image.empty(width, height, self.mode)
-        incubator_geometry.resize(target, self, incubator_geometry.nearest_filter)
-        return target
 
     def get_color(self, x, y):
-        return get_pixel(self.pixels, self.pixelsize, x, y)
+        return get_pixel(self.pixels, self.pixelsize, x, y, self.palette, self.colorlength)
 
     def flip_top_bottom(self):
         """
@@ -69,19 +68,24 @@ class Image(object):
             self.width,
             self.height,
             [array.array(line.typecode, line) for line in reversed(self.pixels)],
-            self.mode
+            self.mode,
+            self.palette,
         )
                     
     def flip_left_right(self):
         """
         Horizontally flips the pixels of source into target
         """
-        flipper = Fliprow(self.width * self.pixelsize, self.pixelsize)
+        if self.pixelsize == 1:
+            flipper = reversed
+        else:
+            flipper = Fliprow(self.width * self.pixelsize, self.pixelsize).flip
         return Image(
             self.width,
             self.height,
-            [flipper.flip(line) for line in self.pixels],
-            self.mode
+            [flipper(line) for line in self.pixels],
+            self.mode,
+            self.palette,
         )
     
     def crop(self, width, height, padding_top, padding_left):
@@ -91,5 +95,6 @@ class Image(object):
             width,
             height,
             [line[linestart:lineend] for line in self.pixels[padding_top:padding_top + height]],
-            self.mode
+            self.mode,
+            self.palette,
         )

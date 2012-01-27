@@ -20,15 +20,17 @@ class PNG:
             return None
         if reader.plte:
             palette = group(array.array('B', reader.plte), 3)
-            pixels = (array.array('B', [x for pixel in line for x in palette[pixel]]) for line in pixels)
+        else:
+            palette = None
         # TODO: Should we really `list` pixels here?
-        return Image(width, height, list(pixels), RGBA if metadata.get('alpha', False) else RGB)
+        return Image(width, height, list(pixels), RGBA if metadata.get('alpha', False) else RGB, palette)
 
     @staticmethod
     def save(image, fileobj):
         writer = Writer(
             width=image.width,
             height=image.height,
-            alpha=image.mode is RGBA
+            alpha=image.mode is RGBA,
+            palette=image.palette,
         )
         writer.write(fileobj, image.pixels)
