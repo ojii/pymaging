@@ -175,6 +175,7 @@ try: # See :pyver:old
 except:
     pass
 import math
+import itertools
 # http://www.python.org/doc/2.4.4/lib/module-operator.html
 import operator
 import struct
