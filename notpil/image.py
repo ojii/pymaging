@@ -14,8 +14,7 @@ class Image(object):
         self.pixels = pixels
         self.mode = mode
         self.palette = palette
-        self.colorlength = self.mode.length
-        self.pixelsize = 1 if self.palette else self.colorlength
+        self.pixelsize = 1 if self.palette else self.mode.length
     
     #==========================================================================
     # Constructors
