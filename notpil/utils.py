@@ -15,3 +15,6 @@ def get_pixel(pixels, pixelsize, x, y, palette, colorlength):
     else:
         start = x * pixelsize
         return line[start:start+pixelsize]
+
+def fdiv(a, b):
+    return float(a) / float(b)

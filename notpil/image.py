@@ -2,6 +2,7 @@
 from notpil.exceptions import FormatNotSupported
 from notpil.formats import get_format, get_format_objects
 from notpil.helpers import Fliprow
+from notpil.resizers import nearest
 from notpil.utils import get_pixel
 import array
 import os
@@ -53,8 +54,15 @@ class Image(object):
     # Geometry Operations 
     #==========================================================================
 
-    def resize(self, width, height, algorithm):
-        raise NotImplementedError()
+    def resize(self, width, height, algorithm=nearest):
+        pixels = algorithm(self, width, height, self.pixelsize)
+        return Image(
+            width,
+            height,
+            pixels,
+            self.mode,
+            self.palette,
+        )
 
     def get_color(self, x, y):
         return get_pixel(self.pixels, self.pixelsize, x, y, self.palette, self.colorlength)
