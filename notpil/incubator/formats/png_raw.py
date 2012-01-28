@@ -1888,11 +1888,27 @@ class Reader:
             d = zlib.decompressobj()
             # Each IDAT chunk is passed to the decompressor, then any
             # remaining state is decompressed out.
+            row_bytes = self.row_bytes
+            undo_filter = self.undo_filter
+            previous = None
             for data in idat:
                 # :todo: add a max_length argument here to limit output
                 # size.
-                yield array('B', d.decompress(data))
-            yield array('B', d.flush())
+                arr = array('B', d.decompress(data))
+                while arr:
+                    filter_type = arr.pop(0)
+                    scanline = arr[:row_bytes]
+                    arr = arr[row_bytes:]
+                    result = undo_filter(filter_type, scanline, previous)
+                    previous = scanline
+                    yield result
+            arr = array('B', d.flush())
+            while arr:
+                filter_type = arr.pop(0)
+                scanline = arr[:row_bytes]
+                result = undo_filter(filter_type, scanline, previous)
+                previous = scanline
+                yield result
 
         self.preamble()
         raw = iterdecomp(iteridat())
@@ -1905,7 +1921,7 @@ class Reader:
             pixels = itertools.imap(lambda *row: array(arraycode, row),
                        *[iter(self.deinterlace(raw))]*self.width*self.planes)
         else:
-            pixels = self.iterboxed(self.iterstraight(raw))
+            pixels = raw
         meta = dict()
         for attr in 'greyscale alpha planes bitdepth interlace'.split():
             meta[attr] = getattr(self, attr)
@@ -1915,25 +1931,6 @@ class Reader:
             if a is not None:
                 meta[attr] = a
         return self.width, self.height, pixels, meta
-
-
-    def read_flat(self):
-        """
-        Read a PNG file and decode it into flat row flat pixel format.
-        Returns (*width*, *height*, *pixels*, *metadata*).
-
-        May use excessive memory.
-
-        `pixels` are returned in flat row flat pixel format.
-
-        See also the :meth:`read` method which returns pixels in the
-        more stream-friendly boxed row flat pixel format.
-        """
-
-        x, y, pixel, meta = self.read()
-        arraycode = 'BH'[meta['bitdepth']>8]
-        pixel = array(arraycode, itertools.chain(*pixel))
-        return x, y, pixel, meta
 
     def palette(self, alpha='natural'):
         """Returns a palette that is a sequence of 3-tuples or 4-tuples,
