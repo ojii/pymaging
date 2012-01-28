@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-from itertools import chain
 from notpil.colors import RGBA, RGB
 from notpil.image import Image
 from notpil.incubator.formats.png_raw import Writer, Reader, FormatError, group
 import array
 
-def flat_pixels_iter(pixels):
-    for row in pixels:
-        yield chain(*row)
 
 class PNG:
     @staticmethod
