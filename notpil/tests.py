@@ -3,7 +3,7 @@
 Just tests that the APIs work without error, does no actual testing of output.
 """
 from __future__ import absolute_import
-from notpil.colors import RGB
+from notpil.colors import RGB, Color
 from notpil.image import Image
 import array
 import unittest
@@ -29,3 +29,8 @@ class IntegrityTests(unittest.TestCase):
     def test_flip_top_bottom(self):
         img = self._get_fake_image()
         img.flip_top_bottom()
+    
+    def test_get_pixel(self):
+        img = self._get_fake_image()
+        color = img.get_color(0, 0)
+        self.assertEqual(color, Color(255, 255, 255, 255))

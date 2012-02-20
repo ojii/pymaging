@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+from notpil.colors import Color
 from notpil.exceptions import FormatNotSupported
 from notpil.formats import get_format, get_format_objects
 from notpil.helpers import Fliprow
-from notpil.resizers import nearest
-from notpil.utils import get_pixel
+from notpil.resample import nearest
+from notpil.utils import get_pixel, set_pixel
 import array
 import os
 
@@ -15,6 +16,7 @@ class Image(object):
         self.pixels = pixels
         self.mode = mode
         self.palette = palette
+        self.reverse_palette = None
         self.pixelsize = 1 if self.palette else self.mode.length
     
     #==========================================================================
@@ -49,13 +51,31 @@ class Image(object):
             format = os.path.splitext(filepath)[1][1:]
         with open(filepath, 'wb') as fobj:
             self.save(fobj, format)
+    
+    #==========================================================================
+    # Helpers
+    #==========================================================================
+    
+    def get_reverse_palette(self):
+        if self.reverse_palette is None:
+            self._fill_reverse_palette()
+        return self.reverse_palette
+
+    def _fill_reverse_palette(self):
+        self.reverse_palette = {}
+        if not self.palette:
+            return
+        for index, color in enumerate(self.palette):
+            color_obj = Color.from_pixel(color)
+            color_obj.to_hexcode()
+            self.reverse_palette[color_obj] = index
             
     #==========================================================================
     # Geometry Operations 
     #==========================================================================
 
-    def resize(self, width, height, algorithm=nearest):
-        pixels = algorithm(self, width, height, self.pixelsize)
+    def resize(self, width, height, resample_algorithm=nearest):
+        pixels = resample_algorithm(self, width, height, self.pixelsize)
         return Image(
             width,
             height,
@@ -65,7 +85,10 @@ class Image(object):
         )
 
     def get_color(self, x, y):
-        return get_pixel(self.pixels, self.pixelsize, x, y, self.palette, self.colorlength)
+        return get_pixel(self.pixels, self.pixelsize, x, y, self.palette)
+    
+    def set_color(self, x, y, color):
+        set_pixel(self.pixels, self.pixelsize, x, y, self.get_reverse_palette(), color)
 
     def flip_top_bottom(self):
         """
@@ -105,3 +128,11 @@ class Image(object):
             self.mode,
             self.palette,
         )
+    
+    #==========================================================================
+    # Manipulation
+    #==========================================================================
+    
+    def draw(self, shape, color):
+        for x, y in shape.iter_pixels():
+            self.set_color(x, y, color)

@@ -5,3 +5,4 @@ class NotPILException(Exception): pass
 class ImageModeError(NotPILException): pass
 class ImageSizeMismatch(NotPILException): pass
 class FormatNotSupported(NotPILException): pass
+class InvalidColor(NotPILException): pass
