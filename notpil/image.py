@@ -134,5 +134,5 @@ class Image(object):
     #==========================================================================
     
     def draw(self, shape, color):
-        for x, y in shape.iter_pixels():
-            self.set_color(x, y, color)
+        for x, y, pixelcolor in shape.iter_pixels(color):
+            self.set_color(x, y, pixelcolor)

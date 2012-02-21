@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
 
+def _mixin_alpha(colors, alpha):
+    from notpil.utils import fdiv
+    ratio = fdiv(alpha, 255)
+    return [int(round(color *  ratio)) for color in colors]
 
 class Color(object):
     def __init__(self, red, green, blue, alpha):
@@ -44,10 +48,16 @@ class Color(object):
             hexcode += 'ff'
         return cls(*[int(''.join(x), 16) for x in zip(hexcode[::2], hexcode[1::2])])
     
+    def get_for_brightness(self, brightness):
+        """
+        Brightness is a float between 0 and 1
+        """
+        return Color(self.red, self.green, self.blue, self.alpha * brightness)
+    
     def to_pixel(self, pixelsize):
         assert pixelsize in (3,4), "Color.to_pixel only supports 3 and 4 value pixels"
         if pixelsize == 3:
-            return [self.red, self.green, self.blue]
+            return _mixin_alpha([self.red, self.green, self.blue], self.alpha)
         else:
             return [self.red, self.green, self.blue, self.alpha]
     

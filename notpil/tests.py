@@ -34,3 +34,10 @@ class IntegrityTests(unittest.TestCase):
         img = self._get_fake_image()
         color = img.get_color(0, 0)
         self.assertEqual(color, Color(255, 255, 255, 255))
+        
+    def test_set_pixel(self):
+        img = self._get_fake_image()
+        test_color = Color(123, 123, 123, 255)
+        img.set_color(0, 0, test_color)
+        color = img.get_color(0, 0)
+        self.assertEqual(color, test_color)
