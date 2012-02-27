@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from notpil.incubator.formats.gif_raw import ImageLoaderGIF
+from pymaging.incubator.formats.gif_raw import ImageLoaderGIF
 
 
 class GIF:

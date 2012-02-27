@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from notpil.colors import RGBA, RGB
-from notpil.image import Image
-from notpil.incubator.formats.png_raw import Writer, Reader, FormatError, group
+from pymaging.colors import RGBA, RGB
+from pymaging.image import Image
+from pymaging.incubator.formats.png_raw import Writer, Reader, FormatError, group
 import array
 
 

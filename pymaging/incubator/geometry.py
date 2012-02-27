@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy
-from notpil.exceptions import (ImageModeError, ImageSizeMismatch, 
-    NotPILException)
-from notpil.incubator.constants import IMAGE_TYPE_UINT8, IMAGE_TYPE_SPECIAL
-from notpil.incubator.storage import copy_info
+from pymaging.exceptions import (ImageModeError, ImageSizeMismatch, 
+    PymagingException)
+from pymaging.incubator.constants import IMAGE_TYPE_UINT8, IMAGE_TYPE_SPECIAL
+from pymaging.incubator.storage import copy_info
 import math
 #
 #/* Undef if you don't need resampling filters */

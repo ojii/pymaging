@@ -1,15 +1,15 @@
-######
-notpil
-######
+########
+pymaging
+########
 
-An alternative for the unmaintained PIL.
+Image processing in Python.
 
 
 ***********
 Development
 ***********
 
-An ``Image`` object (``notpil.image.Image``) has following required attributes:
+An ``Image`` object (``pymaging.image.Image``) has following required attributes:
 
 * ``width``: Width of the image in pixels
 * ``height``: Height of the image in pixels
@@ -67,14 +67,14 @@ Requires ``distribute`` or ``setuptools`` to be installed.
 
 Run this in your shell::
 
-    git clone git@github.com:ojii/notpil.git
-    cd notpil
+    git clone git@github.com:ojii/pymaging.git
+    cd pymaging
     python
 
 
 Do something like this in python::
 
-    >>> from notpil.image import Image
+    >>> from pymaging import Image
     >>> img = Image.open_from_path('/path/to/your/image.png')
     >>> # do cool stuff with img
     >>> img.save_to_path('/foo/bar.png')

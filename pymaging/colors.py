@@ -2,7 +2,7 @@
 from collections import namedtuple
 
 def _mixin_alpha(colors, alpha):
-    from notpil.utils import fdiv
+    from pymaging.utils import fdiv
     ratio = fdiv(alpha, 255)
     return [int(round(color *  ratio)) for color in colors]
 

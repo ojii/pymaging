@@ -21,8 +21,8 @@
 # The unisys/lzw patent has expired, yes. If anyone puts another patent
 # over this code, you must *burn* this file.
 from array import array
-from notpil.colors import RGBA
-from notpil.image import Image
+from pymaging.colors import RGBA
+from pymaging.image import Image
 import struct
 
 '''pygif: gif implementation in python

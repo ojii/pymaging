@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from notpil.colors import Color
-from notpil.exceptions import InvalidColor
+from pymaging.colors import Color
+from pymaging.exceptions import InvalidColor
 import array
 
 def get_pixel(pixels, pixelsize, x, y, palette):

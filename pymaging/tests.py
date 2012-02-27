@@ -3,8 +3,8 @@
 Just tests that the APIs work without error, does no actual testing of output.
 """
 from __future__ import absolute_import
-from notpil.colors import RGB, Color
-from notpil.image import Image
+from pymaging.colors import RGB, Color
+from pymaging.image import Image
 import array
 import unittest
 

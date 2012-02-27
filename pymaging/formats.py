@@ -9,7 +9,7 @@ class FormatRegistry(object):
         if self._loaded:
             return
         import pkg_resources
-        from notpil.incubator.formats import INCUBATOR_FORMATS
+        from pymaging.incubator.formats import INCUBATOR_FORMATS
         self.registry.update({entry_point.name: entry_point.load() for entry_point in pkg_resources.iter_entry_points('notpil.formats')})
         self.registry.update(INCUBATOR_FORMATS)
         self._loaded = True

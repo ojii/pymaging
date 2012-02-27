@@ -1,10 +1,10 @@
-from notpil.colors import Color
-from notpil.image import Image
-import notpil
+from pymaging.colors import Color
+from pymaging import Image
+import pymaging
 import os
 import unittest
 
-TESTDATA = os.path.join(os.path.dirname(notpil.__file__), '..', 'testdata')
+TESTDATA = os.path.join(os.path.dirname(pymaging.__file__), '..', 'testdata')
 
 def _get_filepath(fname):
     return os.path.join(TESTDATA, fname)

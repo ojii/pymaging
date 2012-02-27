@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from notpil.utils import fdiv
+from pymaging.utils import fdiv
 import array
 
 

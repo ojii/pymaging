@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from notpil.colors import Color
-from notpil.exceptions import FormatNotSupported
-from notpil.formats import get_format, get_format_objects
-from notpil.helpers import Fliprow
-from notpil.resample import nearest
-from notpil.utils import get_pixel, set_pixel
+from pymaging.colors import Color
+from pymaging.exceptions import FormatNotSupported
+from pymaging.formats import get_format, get_format_objects
+from pymaging.helpers import Fliprow
+from pymaging.resample import nearest
+from pymaging.utils import get_pixel, set_pixel
 import array
 import os
 
