@@ -205,16 +205,6 @@ def group(s, n):
     # http://www.python.org/doc/2.6/library/functions.html#zip
     return list(zip(*[iter(s)]*n))
 
-def isarray(x):
-    """Same as ``isinstance(x, array)`` except on Python 2.2, where it
-    always returns ``False``.  This helps PyPNG work on Python 2.2.
-    """
-
-    try:
-        return isinstance(x, array)
-    except:
-        return False
-
 try:  # see :pyver:old
     array.tostring
 except:
@@ -1313,7 +1303,7 @@ class _readable:
 
     def read(self, n):
         r = self.buf[self.offset:self.offset+n]
-        if isarray(r):
+        if isinstance(r, array):
             r = r.tostring()
         self.offset += n
         return r
@@ -1324,7 +1314,7 @@ class Reader:
     PNG decoder in pure Python.
     """
 
-    def __init__(self, _guess=None, **kw):
+    def __init__(self, fileobj):
         """
         Create a PNG decoder object.
 
@@ -1340,10 +1330,6 @@ class Reader:
           ``array`` or ``string`` with PNG data.
 
         """
-        if ((_guess is not None and len(kw) != 0) or
-            (_guess is None and len(kw) != 1)):
-            raise TypeError("Reader() takes exactly 1 argument")
-
         # Will be the first 8 bytes, later on.  See validate_signature.
         self.signature = None
         self.transparent = None
@@ -1352,23 +1338,7 @@ class Reader:
         # past the 4 bytes that specify the chunk type).  See preamble
         # method for how this is used.
         self.atchunk = None
-
-        if _guess is not None:
-            if isarray(_guess):
-                kw["bytes"] = _guess
-            elif isinstance(_guess, str):
-                kw["filename"] = _guess
-            elif isinstance(_guess, file):
-                kw["file"] = _guess
-
-        if "filename" in kw:
-            self.file = open(kw["filename"], "rb")
-        elif "file" in kw:
-            self.file = kw["file"]
-        elif "bytes" in kw:
-            self.file = _readable(kw["bytes"])
-        else:
-            raise TypeError("expecting filename, file or bytes array")
+        self.file = fileobj
 
     def chunk(self, seek=None):
         """
@@ -1390,18 +1360,18 @@ class Reader:
             # http://www.w3.org/TR/PNG/#5Chunk-layout
             if not self.atchunk:
                 self.atchunk = self.chunklentype()
-            length,type = self.atchunk
+            length, chunk_type = self.atchunk
             self.atchunk = None
             data = self.file.read(length)
             if len(data) != length:
                 raise ChunkError('Chunk %s too short for required %i octets.'
-                  % (type, length))
+                  % (chunk_type, length))
             checksum = self.file.read(4)
             if len(checksum) != 4:
-                raise ValueError('Chunk %s too short for checksum.', tag)
-            if seek and type != seek:
+                raise ValueError('Chunk %s too short for checksum.', chunk_type)
+            if seek and chunk_type != seek:
                 continue
-            verify = zlib.crc32(strtobytes(type))
+            verify = zlib.crc32(strtobytes(chunk_type))
             verify = zlib.crc32(data, verify)
             # Whether the output from zlib.crc32 is signed or not varies
             # according to hideous implementation details, see
@@ -1416,8 +1386,8 @@ class Reader:
                 (b, ) = struct.unpack('!I', verify)
                 raise ChunkError(
                   "Checksum error in %s chunk: 0x%08X != 0x%08X." %
-                  (type, a, b))
-            return type, data
+                  (chunk_type, a, b))
+            return chunk_type, data
 
     def chunks(self):
         """Return an iterator that will yield each chunk as a
@@ -1594,34 +1564,6 @@ class Reader:
                             flat[i::self.planes]
         return a
 
-    def iterboxed(self, rows):
-        """Iterator that yields each scanline in boxed row flat pixel
-        format.  `rows` should be an iterator that yields the bytes of
-        each row in turn.
-        """
-
-        def asvalues(raw):
-            """Convert a row of raw bytes into a flat row.  Result may
-            or may not share with argument"""
-
-            if self.bitdepth == 8:
-                return raw
-            if self.bitdepth == 16:
-                raw = tostring(raw)
-                return array('H', struct.unpack('!%dH' % (len(raw)//2), raw))
-            assert self.bitdepth < 8
-            width = self.width
-            # Samples per byte
-            spb = 8//self.bitdepth
-            out = array('B')
-            mask = 2**self.bitdepth - 1
-            shifts = map(self.bitdepth.__mul__, reversed(range(spb)))
-            for o in raw:
-                out.extend(map(lambda i: mask&(o>>i), shifts))
-            return out[:width]
-
-        return map(asvalues, rows)
-
     def serialtoflat(self, bytes, width=None):
         """Convert serial format (byte stream) pixel data to flat row
         flat pixel.
@@ -1648,34 +1590,6 @@ class Reader:
             if l <= 0:
                 l = width
         return out
-
-    def iterstraight(self, raw):
-        """Iterator that undoes the effect of filtering, and yields each
-        row in serialised format (as a sequence of bytes).  Assumes input
-        is straightlaced.  `raw` should be an iterable that yields the
-        raw bytes in chunks of arbitrary size."""
-
-        # length of row, in bytes
-        rb = self.row_bytes
-        a = array('B')
-        # The previous (reconstructed) scanline.  None indicates first
-        # line of image.
-        recon = None
-        for some in raw:
-            a.extend(some)
-            while len(a) >= rb + 1:
-                filter_type = a[0]
-                scanline = a[1:rb+1]
-                del a[:rb+1]
-                recon = self.undo_filter(filter_type, scanline, recon)
-                yield recon
-        if len(a) != 0:
-            # :file:format We get here with a file format error: when the
-            # available bytes (after decompressing) do not pack into exact
-            # rows.
-            raise FormatError(
-              'Wrong size for decompressed IDAT chunk.')
-        assert len(a) == 0
 
     def validate_signature(self):
         """If signature (header) has not been read then read and
