@@ -1,6 +1,7 @@
 *.pyc
 .*
 !.gitignore
+!.travis.yml
 /dist/
 /notpil.egg-info/
 /build/
