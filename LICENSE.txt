@@ -1,3 +1,19 @@
+The repository currently contains several files under a different license.
+These files will be moved from this repository into their own repository once
+this package get's ready to be shipped. For now, please refer to file headers
+to see their license.
+
+Files with different licenses:
+
+    pymaging/formats/gif_raw.py: GNU General Public License version 2
+    pymaging/formats/jpeg_raw.py: Custom license, held by Dr. Tony Lin and IJG
+    pymaging/formats/png_reader.py: MIT License, held by Johann C. Rocholl,
+        David Jones and Nicko van Someren.
+    pymaging/formats/png_raw.py: MIT License, held by Johann C. Rocholl,
+        David Jones and Nicko van Someren.
+
+All other files are licensed under the BSD License:
+
 Copyright (c) 2012, Jonas Obrist
 All rights reserved.
 
