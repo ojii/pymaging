@@ -226,8 +226,6 @@ class Reader(object):
         self.sbit = None
         self.trns = None
         self.decompressor = zlib.decompressobj()
-        self.raw = array('B')
-        self.pixels = array('B')
         
     def get_image(self):
         self.validate_signature()
@@ -364,7 +362,23 @@ class Reader(object):
         self.psize = fdiv(self.bit_depth, 8) * planes
         if int(self.psize) == self.psize:
             self.psize = int(self.psize)
+        self.filter_unit = max(1, self.psize)
         self.row_bytes = int(math.ceil(self.width * self.psize))
+        # scanline stuff
+        self.previous_scanline = None
+        self.scanline = array('B')
+        if self.bit_depth == 16:
+            array_code = 'H'
+        else:
+            array_code = 'B'
+        if self.interlace_method:
+            self.pixels = [array(array_code, [0] * self.width) for _ in range(self.height)]
+            self.scanline_length = 0
+            self._process_scanline = self._process_interlaced_scanline
+        else:
+            self.pixels = []
+            self.scanline_length = self.row_bytes + 1
+            self._process_scanline = self._process_straightlaced_scanline
     
     def handle_chunk_PLTE(self, chunk, length):
         # http://www.w3.org/TR/PNG/#11PLTE
@@ -423,16 +437,28 @@ class Reader(object):
         
     def handle_chunk_IDAT(self, chunk, length):
         uncompressed = array('B', self.decompressor.decompress(chunk))
-        self.raw.extend(uncompressed)
-    
+        self.scanline.extend(uncompressed)
+        while len(self.scanline) >= self.scanline_length:
+            filter_type = self.scanline[0]
+            scanline = self.scanline[1:self.scanline_length]
+            del self.scanline[:self.scanline_length]
+            self.previous_scanline = self._process_scanline(filter_type, scanline)
+
     def handle_chunk_IEND(self, chunk, length):
         """
         IEND is the last chunk, so stop reading and actually process IDAT
         """
         if self.plte:
             self._build_palette()
-        self._process_pixels()
         self.done_reading = True
+        
+    def _process_interlaced_scanline(self, filter_type, scanline):
+        raise NotImplementedError
+    
+    def _process_straightlaced_scanline(self, filter_type, scanline):
+        data = FILTERS[filter_type](scanline, self.previous_scanline, self.filter_unit)
+        self.pixels.append(self.as_values(data))
+        return data
         
     def _build_palette(self):
         plte = group(array('B', self.plte), 3)
@@ -442,12 +468,6 @@ class Reader(object):
             plte = map(operator.add, plte, group(trns, 1))
         self.palette = plte
         
-    def _process_pixels(self):
-        if self.interlace_method:
-            self.pixels = self._process_interlaced_pixels()
-        else:
-            self.pixels = self._process_non_interlaced_pixels()
-            
     def _process_interlaced_pixels(self):
         if self.bit_depth > 8:
             arraycode = 'H'
@@ -458,7 +478,7 @@ class Reader(object):
             *[iter(self.deinterlace(self.raw, arraycode))] * self.width * self.planes
         ))
 
-    def deinterlace(self, raw_row, arraycode):
+    def deinterlace(self, raw_data, arraycode):
         """
         Read raw pixel data, undo filters, deinterlace, and flatten.
         Return in flat row flat pixel format.
@@ -485,9 +505,9 @@ class Reader(object):
             # Row size in bytes for this pass.
             row_size = int(math.ceil(self.psize * ppr))
             for y in range(ystart, self.height, ystep):
-                filter_type = raw_row[source_offset]
+                filter_type = raw_data[source_offset]
                 source_offset += 1
-                scanline = raw_row[source_offset:source_offset + row_size]
+                scanline = raw_data[source_offset:source_offset + row_size]
                 source_offset += row_size
                 recon = FILTERS[filter_type](scanline, recon, filter_unit)
                 # Convert so that there is one element per pixel value
@@ -530,36 +550,6 @@ class Reader(object):
             if l <= 0:
                 l = width
         return out
-
-    def _process_non_interlaced_pixels(self):
-        """
-        Processes the data stored in self.raw and returns a list of arrays of
-        pixels
-        """
-        # length of row, in bytes
-        row_bytes = self.row_bytes
-        row_bytes_plus_one = row_bytes + 1
-        pixels = []
-        filter_unit = max(1, self.psize)
-        line = array('B')
-        # The previous (reconstructed) scanline.  None indicates first
-        # line of image.
-        previous = None
-        for some in self.raw:
-            line.append(some)
-            while len(line) >= row_bytes_plus_one:
-                filter_type = line[0]
-                scanline = line[1:row_bytes_plus_one]
-                del line[:row_bytes_plus_one]
-                reconstructed = FILTERS[filter_type](scanline, previous, filter_unit)
-                previous = reconstructed
-                pixels.append(self.as_values(reconstructed))
-        if len(line) != 0:
-            # :file:format We get here with a file format error: when the
-            # available bytes (after decompressing) do not pack into exact
-            # rows.
-            raise PNGReaderError('Wrong size for decompressed IDAT chunk.')
-        return pixels
     
     def as_values(self, raw_row):
         """Convert a row of raw bytes into a flat row.  Result may
