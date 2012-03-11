@@ -24,6 +24,7 @@ Based on C++ code by Dr. Tony Lin:
 *                                                                            *
 *****************************************************************************/
 """
+# The license is based off the license used by libjpeg
 
 
 # JPEG marker codes

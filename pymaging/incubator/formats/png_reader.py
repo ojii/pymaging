@@ -82,14 +82,6 @@ VERIFY_CONSTANT = 2**32 - 1
 ALLOWED_BIT_DEPTHS = [1, 2, 4, 8, 16]
 ALLOWED_COLOR_TYPES = [0, 2, 3, 4, 6]
 
-ADAM7 = ((0, 0, 8, 8),
-         (4, 0, 8, 8),
-         (0, 4, 4, 8),
-         (2, 0, 4, 4),
-         (0, 2, 2, 4),
-         (1, 0, 2, 2),
-         (0, 1, 1, 2))
-
 def group(s, n):
     # See
     # http://www.python.org/doc/2.6/library/functions.html#zip
@@ -124,6 +116,11 @@ class NoChunkType(PNGReaderError): pass
 class InvalidChunkLength(PNGReaderError): pass
 class InvalidChunkType(PNGReaderError): pass
 class ChunkError(PNGReaderError): pass
+class Adam7Error(PNGReaderError): pass
+
+
+def irange(start, stop, step):
+    return itertools.islice(itertools.count(start, step), (stop-start+step-1)//step)
 
 
 def nofilter(scanline, previous, filter_unit):
@@ -199,6 +196,127 @@ FILTERS = {
     3: average,
     4: paeth,
 }
+
+
+class Adam7(object):
+    """
+    For passes 1-7, write those pixels:
+    
+        1 6 4 6 2 6 4 6
+        7 7 7 7 7 7 7 7
+        5 6 5 6 5 6 5 6
+        7 7 7 7 7 7 7 7
+        3 6 4 6 3 6 4 6
+        7 7 7 7 7 7 7 7
+        5 6 5 6 5 6 5 6
+        7 7 7 7 7 7 7 7
+    """
+    passes = [
+        # xstart, ystart, xstep, ystep
+        (0, 0, 8, 8), # pass 1
+        (4, 0, 8, 8), # pass 2
+        (0, 4, 4, 8), # pass 3
+        (2, 0, 4, 4), # pass 4
+        (0, 2, 2, 4), # pass 5
+        (1, 0, 2, 2), # pass 6
+        (0, 1, 1, 2), # pass 7
+    ]
+    
+    LAST_PASS = len(passes) - 1 # index of pass 7
+    
+    def __init__(self, reader):
+        self.reader = reader
+        self.current_pass = 0
+        self.previous_scanline = None
+        self.done = False
+        bit_depth = self.reader.bit_depth
+        self.values_per_row = self.reader.width * self.reader.planes
+        if bit_depth == 8:
+            self.serialtoflat = self.serialtoflat_8
+        elif bit_depth == 16:
+            self.serialtoflat = self.serialtoflat_16
+        else:
+            assert bit_depth < 8
+            self.samples_per_byte = 8 // bit_depth
+            self.mask = 2 ** self.bit_depth - 1
+            self.shifts = map(bit_depth.__mul__, reversed(range(self.samples_per_byte)))
+            self.serialtoflat = self.serialtoflat_complex
+        self.init()
+    
+    def init(self):
+        if self.current_pass > self.LAST_PASS:
+            print 'Done'
+            self.done = True
+            return
+        print 'PASS', self.current_pass + 1
+        self.xstart, self.ystart, self.xstep, self.ystep = self.passes[self.current_pass]
+        print 'xstart', self.xstart, 'ystart', self.ystart, 'xstep', self.xstep, 'ystep', self.ystep
+        self.pixels_per_row = int(math.ceil(fdiv(self.reader.width - self.xstart, self.xstep)))
+        self.row_bytes = int(math.ceil(self.reader.psize * self.pixels_per_row))
+        if self.ystart >= self.reader.height:
+            # empty pass
+            print 'empty pass ystart', self.ystart, 'is outside the image height', self.reader.height
+            self.next_pass()
+        elif self.xstart >= self.reader.width:
+            print 'empty pass xstart', self.xstart, 'is outside the image width', self.reader.width
+            # empty pass
+            self.next_pass()
+        else:
+            self.yiter = irange(self.ystart, self.reader.height, self.ystep)
+            print 'yiter', list(irange(self.ystart, self.reader.height, self.ystep))
+            self.current_y = self.yiter.next()
+    
+    def next_pass(self):
+        self.current_pass += 1
+        self.init()
+        
+    def shift(self):
+        try:
+            self.current_y = self.yiter.next()
+        except StopIteration:
+            self.next_pass()
+        
+    def get_scanline_length(self):
+        return self.row_bytes + 1
+    
+    def process(self, filter_type, scanline):
+        if self.done:
+            raise Adam7Error("Received data after pass 7")
+        print 'processing', scanline
+        data = FILTERS[filter_type](scanline, self.previous_scanline, self.reader.filter_unit)
+        self.previous_scanline = data
+        flat = self.serialtoflat(data, self.pixels_per_row)
+        print 'current_y', self.current_y
+        psize = self.reader.psize
+        # fastpath for pass 7
+        if self.current_pass == self.LAST_PASS:
+            print 'setting */', self.current_y, 'to', flat
+            self.reader.pixels[self.current_y] = flat
+        else:
+            for index, x in enumerate(range(self.xstart, self.reader.width, self.xstep)):
+                print 'setting', x, '/', self.current_y, 'to', flat[index:index+psize]
+                xstart = x * psize
+                xend = xstart + psize
+                self.reader.pixels[self.current_y][xstart:xend] = flat[index:index+psize]
+        self.shift()
+
+    def serialtoflat_8(self, bytes, width=None):
+        return bytes
+    
+    def serialtoflat_16(self, bytes, width=None):
+        stringed_bytes = tostring(bytes)
+        return array('H', struct.unpack('!%dH' % (len(stringed_bytes)//2), stringed_bytes))
+    
+    def serialtoflat_complex(self, bytes, width=None):
+        out = array('B')
+        l = width
+        for o in bytes:
+            out.extend([(self.mask&(o>>s)) for s in self.shifts][:l])
+            l -= self.samples_per_byte
+            if l <= 0:
+                l = width
+        return out
+
 
 class Reader(object):
     def __init__(self, fileobj):
@@ -365,17 +483,18 @@ class Reader(object):
         self.filter_unit = max(1, self.psize)
         self.row_bytes = int(math.ceil(self.width * self.psize))
         # scanline stuff
-        self.previous_scanline = None
         self.scanline = array('B')
         if self.bit_depth == 16:
             array_code = 'H'
         else:
             array_code = 'B'
         if self.interlace_method:
-            self.pixels = [array(array_code, [0] * self.width) for _ in range(self.height)]
-            self.scanline_length = 0
+            self.adam7 = Adam7(self)
+            self.pixels = [array(array_code, [0] * self.width * self.psize) for _ in range(self.height)]
+            self.scanline_length = self.adam7.get_scanline_length()
             self._process_scanline = self._process_interlaced_scanline
         else:
+            self.previous_scanline = None
             self.pixels = []
             self.scanline_length = self.row_bytes + 1
             self._process_scanline = self._process_straightlaced_scanline
@@ -442,7 +561,7 @@ class Reader(object):
             filter_type = self.scanline[0]
             scanline = self.scanline[1:self.scanline_length]
             del self.scanline[:self.scanline_length]
-            self.previous_scanline = self._process_scanline(filter_type, scanline)
+            self._process_scanline(filter_type, scanline)
 
     def handle_chunk_IEND(self, chunk, length):
         """
@@ -452,14 +571,6 @@ class Reader(object):
             self._build_palette()
         self.done_reading = True
         
-    def _process_interlaced_scanline(self, filter_type, scanline):
-        raise NotImplementedError
-    
-    def _process_straightlaced_scanline(self, filter_type, scanline):
-        data = FILTERS[filter_type](scanline, self.previous_scanline, self.filter_unit)
-        self.pixels.append(self.as_values(data))
-        return data
-        
     def _build_palette(self):
         plte = group(array('B', self.plte), 3)
         if self.trns:
@@ -467,8 +578,17 @@ class Reader(object):
             trns.extend([255] * (len(plte) - len(trns)))
             plte = map(operator.add, plte, group(trns, 1))
         self.palette = plte
+    
+    def _process_straightlaced_scanline(self, filter_type, scanline):
+        data = FILTERS[filter_type](scanline, self.previous_scanline, self.filter_unit)
+        self.pixels.append(self.as_values(data))
+        self.previous_scanline = data
+        
+    def _process_interlaced_scanline(self, filter_type, scanline):
+        self.adam7.process(filter_type, scanline)
         
     def _process_interlaced_pixels(self):
+        # OLD!
         if self.bit_depth > 8:
             arraycode = 'H'
         else:
@@ -491,8 +611,7 @@ class Reader(object):
         # entire output array must be in memory.
         line = array(arraycode, [0] * values_per_row * self.height)
         source_offset = 0
-        filter_unit = max(1, self.psize)
-
+                
         for xstart, ystart, xstep, ystep in ADAM7:
             if xstart >= self.width:
                 continue
@@ -509,7 +628,7 @@ class Reader(object):
                 source_offset += 1
                 scanline = raw_data[source_offset:source_offset + row_size]
                 source_offset += row_size
-                recon = FILTERS[filter_type](scanline, recon, filter_unit)
+                recon = FILTERS[filter_type](scanline, recon, self.filter_unit)
                 # Convert so that there is one element per pixel value
                 flat = self.serialtoflat(recon, ppr)
                 if xstep == 1:
@@ -523,33 +642,6 @@ class Reader(object):
                     for i in range(self.planes):
                         line[offset + i:end_offset:skip] = flat[i::self.planes]
         return line
-
-    def serialtoflat(self, bytes, width=None):
-        """Convert serial format (byte stream) pixel data to flat row
-        flat pixel.
-        """
-
-        if self.bit_depth == 8:
-            return bytes
-        if self.bit_depth == 16:
-            bytes = tostring(bytes)
-            return array('H',
-              struct.unpack('!%dH' % (len(bytes)//2), bytes))
-        assert self.bitdepth < 8
-        if width is None:
-            width = self.width
-        # Samples per byte
-        spb = 8//self.bit_depth
-        out = array('B')
-        mask = 2**self.bit_depth - 1
-        shifts = map(self.bit_depth.__mul__, reversed(range(spb)))
-        l = width
-        for o in bytes:
-            out.extend([(mask&(o>>s)) for s in shifts][:l])
-            l -= spb
-            if l <= 0:
-                l = width
-        return out
     
     def as_values(self, raw_row):
         """Convert a row of raw bytes into a flat row.  Result may
