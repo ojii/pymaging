@@ -9,6 +9,14 @@ Welcome to the Pymaging's documentation!
 ########################################
 
 
+*****
+About
+*****
+
+Pymaging is a pure Python imaging library that is compatible both with Python 2
+and Python 3.
+
+
 ********
 Contents
 ********
