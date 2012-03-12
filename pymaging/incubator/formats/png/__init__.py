@@ -25,8 +25,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pymaging.colors import RGBA
-from pymaging.incubator.formats.png_reader import Reader
-from pymaging.incubator.formats.png_raw import Writer, FormatError
+from pymaging.incubator.formats.png.reader import Reader
+from pymaging.incubator.formats.png.raw import Writer, FormatError
 
 
 class PNG:

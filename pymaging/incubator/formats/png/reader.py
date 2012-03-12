@@ -5,7 +5,9 @@ from array import array
 from pymaging.colors import RGBA, RGB
 from pymaging.exceptions import PymagingException
 from pymaging.image import Image
+from pymaging.incubator.formats.png.compat import irange, tostring, bytestostr
 from pymaging.utils import fdiv
+import itertools
 import math
 import operator
 import struct
@@ -64,15 +66,6 @@ import zlib
 # //depot/prj/bangaio/master/code/png.py#67
 
 
-# http://www.python.org/doc/2.2.3/whatsnew/node5.html
-
-try: # See :pyver:old
-    import itertools
-except:
-    pass
-# http://www.python.org/doc/2.4.4/lib/module-operator.html
-# http://www.python.org/doc/2.4.4/lib/module-warnings.html
-
 
 # The PNG signature.
 # http://www.w3.org/TR/PNG/#5PNG-file-signature
@@ -81,33 +74,6 @@ MAX_CHUNK_LENGTH = 2**31-1
 VERIFY_CONSTANT = 2**32 - 1
 ALLOWED_BIT_DEPTHS = [1, 2, 4, 8, 16]
 ALLOWED_COLOR_TYPES = [0, 2, 3, 4, 6]
-
-def group(s, n):
-    # See
-    # http://www.python.org/doc/2.6/library/functions.html#zip
-    return zip(*[iter(s)]*n)
-
-try:  # see :pyver:old
-    array.tostring
-except:
-    def tostring(row):
-        l = len(row)
-        return struct.pack('%dB' % l, *row)
-else:
-    def tostring(row):
-        """Convert row of bytes to string.  Expects `row` to be an
-        ``array``.
-        """
-        return row.tostring()
-
-# Conditionally convert to bytes.  Works on Python 2 and Python 3.
-try:
-    bytes('', 'ascii')
-    def strtobytes(x): return bytes(x, 'iso8859-1')
-    def bytestostr(x): return str(x, 'iso8859-1')
-except:
-    strtobytes = str
-    bytestostr = str
 
 
 class PNGReaderError(PymagingException): pass
@@ -119,8 +85,10 @@ class ChunkError(PNGReaderError): pass
 class Adam7Error(PNGReaderError): pass
 
 
-def irange(start, stop, step):
-    return itertools.islice(itertools.count(start, step), (stop-start+step-1)//step)
+def group(s, n):
+    # See
+    # http://www.python.org/doc/2.6/library/functions.html#zip
+    return list(zip(*[iter(s)]*n))
 
 
 def nofilter(scanline, previous, filter_unit):
@@ -250,6 +218,7 @@ class Adam7(object):
         self.xstart, self.ystart, self.xstep, self.ystep = self.passes[self.current_pass]
         self.pixels_per_row = int(math.ceil(fdiv(self.reader.width - self.xstart, self.xstep)))
         self.row_bytes = int(math.ceil(self.reader.psize * self.pixels_per_row))
+        self.reader.scanline_length = self.get_scanline_length()
         if self.ystart >= self.reader.height:
             # empty pass
             self.next_pass()
@@ -258,7 +227,7 @@ class Adam7(object):
             self.next_pass()
         else:
             self.yiter = irange(self.ystart, self.reader.height, self.ystep)
-            self.current_y = self.yiter.next()
+            self.current_y = next(self.yiter)
     
     def next_pass(self):
         self.current_pass += 1
@@ -266,7 +235,7 @@ class Adam7(object):
         
     def shift(self):
         try:
-            self.current_y = self.yiter.next()
+            self.current_y = next(self.yiter)
         except StopIteration:
             self.next_pass()
         
@@ -282,12 +251,13 @@ class Adam7(object):
         psize = self.reader.psize
         # fastpath for pass 7
         if self.current_pass == self.LAST_PASS:
-            self.reader.pixels[self.current_y] = flat
+            self.reader.pixels[self.current_y] = array(flat.typecode, flat)
         else:
             for index, x in enumerate(range(self.xstart, self.reader.width, self.xstep)):
                 xstart = x * psize
                 xend = xstart + psize
                 self.reader.pixels[self.current_y][xstart:xend] = flat[index:index+psize]
+                del flat[index:index+psize]
         self.shift()
 
     def serialtoflat_8(self, bytes, width=None):
@@ -577,17 +547,6 @@ class Reader(object):
     def _process_interlaced_scanline(self, filter_type, scanline):
         self.adam7.process(filter_type, scanline)
         
-    def _process_interlaced_pixels(self):
-        # OLD!
-        if self.bit_depth > 8:
-            arraycode = 'H'
-        else:
-            arraycode = 'B'
-        return list(itertools.imap(
-            lambda *row: array(arraycode, row),
-            *[iter(self.deinterlace(self.raw, arraycode))] * self.width * self.planes
-        ))
-
     def deinterlace(self, raw_data, arraycode):
         """
         Read raw pixel data, undo filters, deinterlace, and flatten.

@@ -12,10 +12,10 @@ Python Compatiblity
 
 Any of the following:
 
-* Python 2.7
-* Python 3.2 or higher
-* PyPy 1.7 or higher
-* Any other Python 2.7/Python 3.2 compatible Python implenentation.
+* Python 2.6
+* Python 3.1 or higher
+* PyPy 1.8 or higher
+* Any other Python 2.6/Python 3.1 compatible Python implementation.
 
 
 Required Python packages

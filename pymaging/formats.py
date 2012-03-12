@@ -35,7 +35,8 @@ class FormatRegistry(object):
             return
         import pkg_resources
         from pymaging.incubator.formats import INCUBATOR_FORMATS
-        self.registry.update({entry_point.name: entry_point.load() for entry_point in pkg_resources.iter_entry_points('notpil.formats')})
+        for entry_point in pkg_resources.iter_entry_points('notpil.formats'):
+            self.registry[entry_point.name] = entry_point.load()
         self.registry.update(INCUBATOR_FORMATS)
         self._loaded = True
         
