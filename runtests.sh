@@ -9,7 +9,7 @@ for version in $PYTHON_VERSIONS; do
         echo "****************************"
         echo "Running tests for Python $version"
         echo "****************************"
-        $pybin `which nosetests`
+        $pybin $NOSEBIN
     fi
 done
 
