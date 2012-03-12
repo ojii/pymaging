@@ -4,7 +4,8 @@ pymaging
 
 Pure Python imaging library.
 
-Supports Python 2.6, 2.7, 3.1, 3.2 and PyPy 1.8.
-
-Check out the docs on http://pymaging.rtfd.org
-1
+* Author: Jonas Obrist and https://github.com/ojii/pymaging/contributors
+* License: BSD (some files have other licenses, see LICENSE.txt)
+* Compatibility: Python 2.6, 2.7, 3.1, 3.2 and PyPy 1.8.
+* Requirements: distribute
+* Docs: http://pymaging.rtfd.org
