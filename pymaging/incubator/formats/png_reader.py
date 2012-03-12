@@ -245,25 +245,19 @@ class Adam7(object):
     
     def init(self):
         if self.current_pass > self.LAST_PASS:
-            print 'Done'
             self.done = True
             return
-        print 'PASS', self.current_pass + 1
         self.xstart, self.ystart, self.xstep, self.ystep = self.passes[self.current_pass]
-        print 'xstart', self.xstart, 'ystart', self.ystart, 'xstep', self.xstep, 'ystep', self.ystep
         self.pixels_per_row = int(math.ceil(fdiv(self.reader.width - self.xstart, self.xstep)))
         self.row_bytes = int(math.ceil(self.reader.psize * self.pixels_per_row))
         if self.ystart >= self.reader.height:
             # empty pass
-            print 'empty pass ystart', self.ystart, 'is outside the image height', self.reader.height
             self.next_pass()
         elif self.xstart >= self.reader.width:
-            print 'empty pass xstart', self.xstart, 'is outside the image width', self.reader.width
             # empty pass
             self.next_pass()
         else:
             self.yiter = irange(self.ystart, self.reader.height, self.ystep)
-            print 'yiter', list(irange(self.ystart, self.reader.height, self.ystep))
             self.current_y = self.yiter.next()
     
     def next_pass(self):
@@ -282,19 +276,15 @@ class Adam7(object):
     def process(self, filter_type, scanline):
         if self.done:
             raise Adam7Error("Received data after pass 7")
-        print 'processing', scanline
         data = FILTERS[filter_type](scanline, self.previous_scanline, self.reader.filter_unit)
         self.previous_scanline = data
         flat = self.serialtoflat(data, self.pixels_per_row)
-        print 'current_y', self.current_y
         psize = self.reader.psize
         # fastpath for pass 7
         if self.current_pass == self.LAST_PASS:
-            print 'setting */', self.current_y, 'to', flat
             self.reader.pixels[self.current_y] = flat
         else:
             for index, x in enumerate(range(self.xstart, self.reader.width, self.xstep)):
-                print 'setting', x, '/', self.current_y, 'to', flat[index:index+psize]
                 xstart = x * psize
                 xend = xstart + psize
                 self.reader.pixels[self.current_y][xstart:xend] = flat[index:index+psize]

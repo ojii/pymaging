@@ -5,3 +5,4 @@
 /dist/
 /notpil.egg-info/
 /build/
+/docs/_*

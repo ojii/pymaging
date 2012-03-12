@@ -23,10 +23,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pymaging.incubator.formats.gif import GIF
 from pymaging.incubator.formats.png import PNG
 
 INCUBATOR_FORMATS = {
-    'gif': GIF,
     'png': PNG,
 }

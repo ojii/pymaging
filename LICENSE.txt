@@ -5,7 +5,6 @@ to see their license.
 
 Files with different licenses:
 
-    pymaging/formats/gif_raw.py: GNU General Public License version 2
     pymaging/formats/jpeg_raw.py: Custom license, held by Dr. Tony Lin and IJG
     pymaging/formats/png_reader.py: MIT License, held by Johann C. Rocholl,
         David Jones and Nicko van Someren.
