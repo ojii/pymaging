@@ -2,7 +2,9 @@
 .*
 !.gitignore
 !.travis.yml
+!.coveragerc
 /dist/
 /notpil.egg-info/
 /build/
 /docs/_*
+/htmlcov/
