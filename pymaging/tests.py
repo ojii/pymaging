@@ -205,15 +205,3 @@ class DrawTests(PymagingBaseTestCase):
             [BLACK, WHITE, BLACK, BLACK, BLACK],
             [BLACK, WHITE, BLACK, BLACK, BLACK],
         ])
-    
-    def test_xiaolin_wu_line_drawing(self):
-        img = image_factory([
-            [BLACK, BLACK, BLACK, BLACK, BLACK],
-            [BLACK, BLACK, BLACK, BLACK, BLACK],
-            [BLACK, BLACK, BLACK, BLACK, BLACK],
-            [BLACK, BLACK, BLACK, BLACK, BLACK],
-            [BLACK, BLACK, BLACK, BLACK, BLACK],
-        ])
-        line = AntiAliasedLine(0, 0, 4, 4)
-        img.draw(line, WHITE)
-        print(img.pixels)
