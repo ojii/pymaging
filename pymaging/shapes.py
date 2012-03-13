@@ -81,9 +81,6 @@ class Line(Pixel):
             x0, x1 = x1, x0
             y0, y1 = y1, y0
         
-        x1 += 1
-        y1 += 1
-        
         delta_x = x1 - x0
         delta_y = abs(y1 - y0)
         error = 0.0
@@ -104,6 +101,7 @@ class Line(Pixel):
             if error >= 0.5:
                 y = y + ystep
                 error = error - 1.0
+        yield x1, y1, color
 
 # For AntiAliasedLin
 _round = lambda x: int(round(x))
