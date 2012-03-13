@@ -29,7 +29,6 @@ import array
 
 
 def nearest(source, width, height, pixelsize):
-    assert pixelsize == 1, "yea... gotta implement this generically"
     pixels = []
     pixelappend = pixels.append # cache for cpython
     x_ratio = fdiv(source.width, width) # get the x-axis ratio
@@ -39,9 +38,11 @@ def nearest(source, width, height, pixelsize):
     for y in y_range:
         source_y = int(round(y * y_ratio)) # get the source line
         line = array.array('B') # initialize a new line
-        lineappend = line.append # cache for cypthon
-        for x in x_range:
-            source_x = int(round(x * x_ratio)) # get the source row
-            lineappend(source.pixels[source_y][source_x])
+        lineextend = line.extend # cache for cypthon
+        for x_coord in x_range:
+            source_x_coord = int(round(x_coord * x_ratio)) # get the source row
+            source_x_start = source_x_coord * pixelsize
+            source_x_end = source_x_start + pixelsize
+            lineextend(source.pixels[source_y][source_x_start:source_x_end])
         pixelappend(line)
     return pixels

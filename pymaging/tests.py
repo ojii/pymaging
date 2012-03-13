@@ -30,10 +30,6 @@ import array
 import itertools
 import unittest
 
-"""
-Just tests that the APIs work without error, does no actual testing of output.
-"""
-
 
 RED = Color(255, 0, 0, 255)
 GREEN = Color(0, 255, 0, 255)
@@ -47,7 +43,6 @@ def image_factory(colors, alpha=True):
     pixelsize = 4 if alpha else 3
     pixels = [array.array('B', itertools.chain(*[color.to_pixel(pixelsize) for color in row])) for row in colors]
     return Image(width, height, pixels, ColorType(pixelsize))
-
 
 
 class PymagingBaseTestCase(unittest.TestCase):
@@ -91,6 +86,20 @@ class BasicTests(PymagingBaseTestCase):
         self.assertImage(img, [
             [WHITE, BLACK],
             [BLACK, BLACK],
+        ])
+
+
+class ResizeCropTests(PymagingBaseTestCase):
+    def test_resize(self):
+        img = image_factory([
+            [RED, GREEN, BLUE],
+            [GREEN, BLUE, RED],
+            [BLUE, RED, GREEN],
+        ])
+        img = img.resize(2, 2)
+        self.assertImage(img, [
+            [RED, BLUE],
+            [BLUE, GREEN],
         ])
 
 
@@ -153,17 +162,6 @@ class DrawTests(PymagingBaseTestCase):
         ])
         line = Line(0, 4, 4, 0)
         img.draw(line, WHITE)
-        from pprint import pprint
-        print('real')
-        pprint(img.pixels)
-        print('expected')
-        pprint(image_factory([
-            [BLACK, BLACK, BLACK, BLACK, WHITE],
-            [BLACK, BLACK, BLACK, WHITE, BLACK],
-            [BLACK, BLACK, WHITE, BLACK, BLACK],
-            [BLACK, WHITE, BLACK, BLACK, BLACK],
-            [WHITE, BLACK, BLACK, BLACK, BLACK],
-        ]).pixels)
         self.assertImage(img, [
             [BLACK, BLACK, BLACK, BLACK, WHITE],
             [BLACK, BLACK, BLACK, WHITE, BLACK],
