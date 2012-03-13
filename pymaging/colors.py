@@ -77,7 +77,7 @@ class Color(object):
         """
         Brightness is a float between 0 and 1
         """
-        return Color(self.red, self.green, self.blue, self.alpha * brightness)
+        return Color(self.red, self.green, self.blue, int(round(self.alpha * brightness)))
     
     def to_pixel(self, pixelsize):
         assert pixelsize in (3,4), "Color.to_pixel only supports 3 and 4 value pixels"

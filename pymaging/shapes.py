@@ -193,7 +193,7 @@ class AntiAliasedLine(Line):
             """
             plot the pixel at (x, y) with brightness c (where 0 ≤ c ≤ 1)
             """
-            return x, y, color.get_for_brightness(c)
+            return int(x), int(y), color.get_for_brightness(c)
         dx = self.end_x - self.start_x
         dy = self.end_y - self.start_y
         x1, x2, y1, y2 = self.start_x, self.end_x, self.start_y, self.end_y
