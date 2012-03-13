@@ -116,7 +116,7 @@ class DrawTests(PymagingBaseTestCase):
             [BLACK, BLACK],
         ])
         
-    def test_draw_line(self):
+    def test_draw_line_topleft_bottomright(self):
         img = image_factory([
             [BLACK, BLACK, BLACK, BLACK, BLACK],
             [BLACK, BLACK, BLACK, BLACK, BLACK],
@@ -134,7 +134,7 @@ class DrawTests(PymagingBaseTestCase):
             [BLACK, BLACK, BLACK, BLACK, WHITE],
         ])
         
-    def test_draw_line_reverse(self):
+    def test_draw_line_bottomright_topleft(self):
         img = image_factory([
             [BLACK, BLACK, BLACK, BLACK, BLACK],
             [BLACK, BLACK, BLACK, BLACK, BLACK],
@@ -152,7 +152,7 @@ class DrawTests(PymagingBaseTestCase):
             [BLACK, BLACK, BLACK, BLACK, WHITE],
         ])
         
-    def test_draw_line_steep(self):
+    def test_draw_line_bottomleft_topright(self):
         img = image_factory([
             [BLACK, BLACK, BLACK, BLACK, BLACK],
             [BLACK, BLACK, BLACK, BLACK, BLACK],
@@ -168,6 +168,42 @@ class DrawTests(PymagingBaseTestCase):
             [BLACK, BLACK, WHITE, BLACK, BLACK],
             [BLACK, WHITE, BLACK, BLACK, BLACK],
             [WHITE, BLACK, BLACK, BLACK, BLACK],
+        ])
+        
+    def test_draw_line_topright_bottomleft(self):
+        img = image_factory([
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+        ])
+        line = Line(4, 0, 0, 4)
+        img.draw(line, WHITE)
+        self.assertImage(img, [
+            [BLACK, BLACK, BLACK, BLACK, WHITE],
+            [BLACK, BLACK, BLACK, WHITE, BLACK],
+            [BLACK, BLACK, WHITE, BLACK, BLACK],
+            [BLACK, WHITE, BLACK, BLACK, BLACK],
+            [WHITE, BLACK, BLACK, BLACK, BLACK],
+        ])
+        
+    def test_draw_line_steep(self):
+        img = image_factory([
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+            [BLACK, BLACK, BLACK, BLACK, BLACK],
+        ])
+        line = Line(0, 0, 1, 4)
+        img.draw(line, WHITE)
+        self.assertImage(img, [
+            [WHITE, BLACK, BLACK, BLACK, BLACK],
+            [WHITE, BLACK, BLACK, BLACK, BLACK],
+            [BLACK, WHITE, BLACK, BLACK, BLACK],
+            [BLACK, WHITE, BLACK, BLACK, BLACK],
+            [BLACK, WHITE, BLACK, BLACK, BLACK],
         ])
 
 
