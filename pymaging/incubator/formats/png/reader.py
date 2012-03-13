@@ -7,7 +7,6 @@ from pymaging.exceptions import PymagingException
 from pymaging.image import Image
 from pymaging.incubator.formats.png.compat import irange, tostring, bytestostr
 from pymaging.utils import fdiv
-import itertools
 import math
 import operator
 import struct

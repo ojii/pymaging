@@ -52,7 +52,7 @@ def set_pixel(pixels, pixelsize, x, y, reverse_palette, color):
         pixels[y][x] = index
     else:
         start = x * pixelsize
-        end = x * pixelsize
+        end = x * pixelsize + pixelsize
         pixel = color.to_pixel(pixelsize)
         pixels[y][start:end] = array.array('B', pixel)
 

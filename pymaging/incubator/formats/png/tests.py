@@ -60,5 +60,3 @@ class PNGTests(unittest.TestCase):
         self.assertEqual(img.get_color(0, 1), WHITE)
         self.assertEqual(img.get_color(1, 0), WHITE)
 
-if __name__ == "__main__":
-    unittest.main()

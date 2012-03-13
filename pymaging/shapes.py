@@ -33,11 +33,11 @@ class Pixel(object):
         self.x = x
         self.y = y
         
-    def iter_pixels(self):
-        yield self.x, self.y
+    def iter_pixels(self, color):
+        yield self.x, self.y, color
 
 
-class Line(object):
+class Line(Pixel):
     def __init__(self, start_x, start_y, end_x, end_y):
         self.start_x = start_x
         self.start_y = start_y
@@ -80,6 +80,9 @@ class Line(object):
         if x0 > x1:
             x0, x1 = x1, x0
             y0, y1 = y1, y0
+        
+        x1 += 1
+        y1 += 1
         
         delta_x = x1 - x0
         delta_y = abs(y1 - y0)
