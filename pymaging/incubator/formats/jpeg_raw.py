@@ -810,7 +810,7 @@ class TonyJpegDecoder:
       # DC coefficient (with scale factor as needed).
       # With typical images and quantization tables, half or more of the
       # column DCT calculations can be simplified this way.
-      if reduce(int.__or__, [coeff[inptr+DCTSIZE*n] for n in range(1,8)]) == 0:
+      if reduce(int.__or__, map(int, [coeff[inptr+DCTSIZE*n] for n in range(1,8)])) == 0:
         """ AC terms all zero """
         dcval = coeff[inptr + DCTSIZE*0] * quant[quantptr+DCTSIZE*0]
             
