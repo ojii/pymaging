@@ -545,51 +545,6 @@ class Reader(object):
         
     def _process_interlaced_scanline(self, filter_type, scanline):
         self.adam7.process(filter_type, scanline)
-        
-    def deinterlace(self, raw_data, arraycode):
-        """
-        Read raw pixel data, undo filters, deinterlace, and flatten.
-        Return in flat row flat pixel format.
-        """
-        # Values per row (of the target image)
-        values_per_row = self.width * self.planes
-
-        # Make a result array, and make it big enough.  Interleaving
-        # writes to the output array randomly (well, not quite), so the
-        # entire output array must be in memory.
-        line = array(arraycode, [0] * values_per_row * self.height)
-        source_offset = 0
-                
-        for xstart, ystart, xstep, ystep in ADAM7:
-            if xstart >= self.width:
-                continue
-            # The previous (reconstructed) scanline.  None at the
-            # beginning of a pass to indicate that there is no previous
-            # line.
-            recon = None
-            # Pixels per row (reduced pass image)
-            ppr = int(math.ceil((self.width-xstart)/float(xstep)))
-            # Row size in bytes for this pass.
-            row_size = int(math.ceil(self.psize * ppr))
-            for y in range(ystart, self.height, ystep):
-                filter_type = raw_data[source_offset]
-                source_offset += 1
-                scanline = raw_data[source_offset:source_offset + row_size]
-                source_offset += row_size
-                recon = FILTERS[filter_type](scanline, recon, self.filter_unit)
-                # Convert so that there is one element per pixel value
-                flat = self.serialtoflat(recon, ppr)
-                if xstep == 1:
-                    assert xstart == 0
-                    offset = y * values_per_row
-                    line[offset:offset + values_per_row] = flat
-                else:
-                    offset = y * values_per_row + xstart * self.planes
-                    end_offset = (y + 1) * values_per_row
-                    skip = self.planes * xstep
-                    for i in range(self.planes):
-                        line[offset + i:end_offset:skip] = flat[i::self.planes]
-        return line
     
     def as_values(self, raw_row):
         """Convert a row of raw bytes into a flat row.  Result may

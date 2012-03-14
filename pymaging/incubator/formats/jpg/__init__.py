@@ -41,6 +41,7 @@ def decode(fileobj):
     # bmpout is in bgr format, bottom to top. it has padding stuff.
     pixels = []
     for _ in range(0, decoder.Height):
+        #TODO: flip bgr to rgb
         pixels.append(array.array('B', bmpout[:3 * decoder.Width]))
         del bmpout[:3 * decoder.Width]
         del bmpout[:2] # kill padding
