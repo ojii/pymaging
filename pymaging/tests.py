@@ -93,6 +93,12 @@ class BasicTests(PymagingBaseTestCase):
         color = GREEN.get_for_brightness(0.5)
         result = base.cover_with(color)
         self.assertEqual(result, Color(127, 127, 0, 255))
+        
+    def test_color_mix_with_fastpath(self):
+        base = RED
+        color = GREEN
+        result = base.cover_with(color)
+        self.assertEqual(result, GREEN)
 
 
 class ResizeCropTests(PymagingBaseTestCase):

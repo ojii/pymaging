@@ -83,23 +83,24 @@ class Color(object):
         """
         Brightness is a float between 0 and 1
         """
-        return Color(self.red, self.green, self.blue, int(round(self.alpha * brightness)))
+        return Color(self.red, self.green, self.blue, int(round((self.alpha + 1) * brightness)) - 1)
     
-    def cover_with(self, base):
+    def cover_with(self, cover_color):
         """
         Mix the two colors respecting their alpha value.
         
-        Puts itself over the base color respecting the alpha values.
+        Puts cover_color over itself compositing the colors using the alpha
+        values.
         """
         # fastpath for solid colors
-        if self.alpha == 255:
-            return Color(self.red, self.green, self.blue, self.alpha)
+        if cover_color.alpha == 255:
+            return Color(cover_color.red, cover_color.green, cover_color.blue, cover_color.alpha)
 
-        srca = fdiv(base.alpha + 1, 256)
+        srca = fdiv(cover_color.alpha + 1, 256)
         dsta = fdiv(self.alpha + 1, 256)
         outa = srca + dsta * (1 - srca)
 
-        srcr, srcg, srcb = base.red + 1, base.green + 1, base.blue + 1
+        srcr, srcg, srcb = cover_color.red + 1, cover_color.green + 1, cover_color.blue + 1
         dstr, dstg, dstb = self.red + 1, self.green + 1, self.blue + 1
         
         print(srcr, srcg, srcb, srca)
