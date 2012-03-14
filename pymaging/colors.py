@@ -88,7 +88,13 @@ class Color(object):
     def cover_with(self, base):
         """
         Mix the two colors respecting their alpha value.
+        
+        Puts itself over the base color respecting the alpha values.
         """
+        # fastpath for solid colors
+        if self.alpha == 255:
+            return Color(self.red, self.green, self.blue, self.alpha)
+
         srca = fdiv(base.alpha + 1, 256)
         dsta = fdiv(self.alpha + 1, 256)
         outa = srca + dsta * (1 - srca)
