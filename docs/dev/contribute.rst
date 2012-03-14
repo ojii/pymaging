@@ -2,12 +2,6 @@
 Contributing to Pymaging
 ########################
 
-Like every open-source project, Pymagin is always looking for motivated
-individuals to contribute to it's source code.
-However, to ensure the highest code quality and keep the repository nice and
-tidy, everyone is encouraged to follow a few simple guidelines to make it
-easier for everyone.
-
 
 *********
 Community
@@ -15,22 +9,6 @@ Community
 
 People interested in developing for the Pymaging should join the #pymaging
 IRC channel on `freenode`_ for help and to discuss the development.
-
-
-*************
-In a nutshell
-*************
-
-Here's what the contribution process looks like, in a bullet-points fashion, and
-only for the stuff we host on GitHub:
-
-#. Pymaging is hosted on `GitHub`_, at https://github.com/ojii/pymaging
-#. The best method to contribute back is to create an account there, then fork
-   the project. You can use this fork as if it was your own project, and should
-   push your changes to it.
-#. When you feel your code is good enough for inclusion, "send us a `pull
-   request`_", using the nice GitHub web interface.
-
 
 
 *****************
@@ -41,26 +19,19 @@ Contributing Code
 General
 =======
 
-- Code *must* be tested. Untested patches will be declined.
+- Code **must** be tested. Untested patches will be declined.
 - If a patch affects the public facing API, it must document these changes.
 
-Since we're hosted on GitHub, pymagin uses `git`_ as a version control system.
+Since we're hosted on GitHub, pymaging uses `git`_ as a version control system.
 
-The `GitHub help`_ is very well written and will get you started on using git
-and GitHub in a jiffy. It is an invaluable resource for newbies and old timers
-alike.
+If you're not familiar with git, check out the `GitHub help`_ page.
 
 
 Syntax and conventions
 ======================
 
-We try to conform to `PEP8`_ as much as possible. A few highlights:
-
-- Indentation should be exactly 4 spaces. Not 2, not 6, not 8. **4**. Also, tabs
-  are evil.
-- We try (loosely) to keep the line length at 79 characters. Generally the rule
-  is "it should look good in a terminal-base editor" (eg vim), but we try not be
-  [Godwin's law] about it.
+We try to conform to `PEP8`_ as much as possible. This means 4 space
+indentation.
 
 
 Process
@@ -78,12 +49,6 @@ This is how you fix a bug or add a feature:
 Tests
 =====
 
-Having a wide and comprehensive library of unit and integration tests is
-of exceeding importance. Contributing tests is widely regarded as a very
-prestigious contribution (you're making everybody's future work much easier by
-doing so). Good karma for you. Cookie points. Maybe even a beer if we meet in
-person :)
-
 If you're unsure how to write tests, feel free to ask for help on IRC.
 
 Running the tests
@@ -98,25 +63,7 @@ just run ``nosetests`` in the root directory. If you don't, you can also use
 Contributing Documentation
 **************************
 
-Perhaps considered "boring" by hard-core coders, documentation is sometimes even
-more important than code! This is what brings fresh blood to a project, and
-serves as a reference for old timers. On top of this, documentation is the one
-area where less technical people can help most - you just need to write a
-semi-decent English. People need to understand you. We don't care about style or
-correctness.
-
-Documentation should be:
-
-- We use `Sphinx`_/`restructuredText`_. File extensions should be .rst.
-- Written in English. We can discuss how it would bring more people to the
-  project to have a Klingon translation or anything, but that's a problem we
-  will ask ourselves when we already have a good documentation in English.
-- Accessible. You should assume the reader to be moderately familiar with
-  Python, but not anything else.
-
-Also, contributing to the documentation will earn you great respect from the
-core developers. You get good karma just like a test contributor, but you get
-double cookie points. Seriously. You rock.
+The documentation is written using `Sphinx`_/`restructuredText`_. 
 
 Section style
 =============

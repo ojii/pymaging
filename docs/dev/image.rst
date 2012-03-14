@@ -24,4 +24,4 @@ data (color) can be fetched using ``palette[pixelvalue]``. Otherwise you can
 get the data (color) using ``pixels[y][x * pixelsize:(x * pixelsize) + pixelsize]``.
 
 There is also the helper method ``Image.get_color`` to get a color at a x/y
-position.
+position, this should only be used for very high level operation.
