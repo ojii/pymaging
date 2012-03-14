@@ -96,12 +96,12 @@ class Color(object):
         if cover_color.alpha == 255:
             return Color(cover_color.red, cover_color.green, cover_color.blue, cover_color.alpha)
 
-        srca = fdiv(cover_color.alpha + 1, 256)
-        dsta = fdiv(self.alpha + 1, 256)
+        srca = fdiv(cover_color.alpha, 255)
+        dsta = fdiv(self.alpha, 255)
         outa = srca + dsta * (1 - srca)
 
-        srcr, srcg, srcb = cover_color.red + 1, cover_color.green + 1, cover_color.blue + 1
-        dstr, dstg, dstb = self.red + 1, self.green + 1, self.blue + 1
+        srcr, srcg, srcb = cover_color.red, cover_color.green, cover_color.blue
+        dstr, dstg, dstb = self.red, self.green, self.blue
         
         print(srcr, srcg, srcb, srca)
         print(dstr, dstg, dstb, dsta)
@@ -112,10 +112,10 @@ class Color(object):
 
         print(outr, outg, outb, outa)
         
-        red = int(round(outr)) - 1
-        green = int(round(outg)) - 1
-        blue = int(round(outb)) - 1
-        alpha = int(round(outa * 256)) - 1
+        red = int(round(outr))
+        green = int(round(outg))
+        blue = int(round(outb))
+        alpha = int(round(outa * 255))
 
         return Color(red, green, blue, alpha)
         
