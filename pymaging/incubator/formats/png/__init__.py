@@ -25,26 +25,25 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pymaging.colors import RGBA
-from pymaging.incubator.formats.png.reader import Reader
+from pymaging.formats import Format
 from pymaging.incubator.formats.png.raw import Writer, FormatError
+from pymaging.incubator.formats.png.reader import Reader, PNGReaderError
 
+def decode(fileobj):
+    reader = Reader(fileobj=fileobj)
+    try:
+        return reader.get_image()
+    except PNGReaderError:
+        fileobj.seek(0)
+        return None
 
-class PNG:
-    @staticmethod
-    def open(fileobj):
-        reader = Reader(fileobj=fileobj)
-        try:
-            return reader.get_image()
-        except FormatError:
-            fileobj.seek(0)
-            return None
+def encode(image, fileobj):
+    writer = Writer(
+        width=image.width,
+        height=image.height,
+        alpha=image.mode is RGBA,
+        palette=image.palette,
+    )
+    writer.write(fileobj, image.pixels)
 
-    @staticmethod
-    def save(image, fileobj):
-        writer = Writer(
-            width=image.width,
-            height=image.height,
-            alpha=image.mode is RGBA,
-            palette=image.palette,
-        )
-        writer.write(fileobj, image.pixels)
+PNG = Format(decode, encode, ['png'])

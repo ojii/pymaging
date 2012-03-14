@@ -241,7 +241,6 @@ class TonyJpegDecoder:
     self.read_markers(jpegsrc)
     if self.Width <= 0 or self.Height <= 0:
       raise ValueError("Error reading the file header")
-    print "jpeg header read, %d x %d" % (self.Width, self.Height)
     self.DataBytesLeft = len(jpegsrc) - self.DataPos
     self.InitDecoder()
 
@@ -264,7 +263,6 @@ class TonyJpegDecoder:
   def SkipMarker(self):
     """Skip over an unknown or uninteresting variable-length marker"""
     length = self.ReadWord()
-    print "skipping marker, length", length
     self.DataPos += length - 2
 
   def GetDqt(self):
@@ -298,8 +296,6 @@ class TonyJpegDecoder:
       c = self.ReadByte()
       comp.h_samp_factor = (c >> 4) & 15
       comp.v_samp_factor = (c     ) & 15
-      if (ci == 0) and (c != 34):
-        print "comp 0 samp_factor = %d" % c
       comp.quant_tbl_no = self.ReadByte()
       self.comp_info[ci] = comp
     if self.comp_info[0].h_samp_factor == 1 and self.comp_info[0].v_samp_factor == 1:
@@ -356,7 +352,6 @@ class TonyJpegDecoder:
     self.length = self.ReadWord()
     self.restart_interval = self.ReadWord()
     self.restarts_to_go = self.restart_interval
-    print "restart_interval=%d" % self.restart_interval
 
   def read_markers(self, inbuf):
     """raises an error or returns if successfull"""
@@ -364,7 +359,6 @@ class TonyJpegDecoder:
     while True:
       # IJG use first_marker() and next_marker()
       marker = self.ReadOneMarker()
-      print "marker %02x" % marker
       # read more info according to the marker
       # the order of cases is in jpg file made by ms paint
       if marker == M_SOI:
@@ -965,10 +959,6 @@ class TonyJpegDecoder:
   # Below are difficult and complex HUFFMAN decoding !!!!!
   def DumpHuffman(self, dctbl):
     array2str = lambda array: " ".join(["%02x" % i for i in array])
-    print "dctbl: mincode: %s maxcode: %s valptr: %s bits: %s " % (array2str(dctbl.mincode), array2str(dctbl.maxcode), array2str(dctbl.valptr), array2str(dctbl.bits))
-    print "dctbl: huffval: %s" % array2str(dctbl.huffval)
-    print "dctbl: look_nbits: %s" % array2str(dctbl.look_nbits)
-    print "dctbl: look_sym: %s" % array2str(dctbl.look_sym)
 
   def HuffmanDecode(self, iBlock):
     """source is self.Data

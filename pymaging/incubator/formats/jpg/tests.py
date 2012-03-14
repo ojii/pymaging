@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2012, Jonas Obrist
 # All rights reserved.
 #
@@ -23,46 +22,27 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from array import array
-import itertools
-import struct
+from pymaging.colors import Color
+from pymaging import Image
+import pymaging
+import os
+import unittest
 
-try:  # see :pyver:old
-    array.tostring
-except:
-    def tostring(row):
-        l = len(row)
-        return struct.pack('%dB' % l, *row)
-else:
-    def tostring(row):
-        """Convert row of bytes to string.  Expects `row` to be an
-        ``array``.
-        """
-        return row.tostring()
+TESTDATA = os.path.join(os.path.dirname(pymaging.__file__), '..', 'testdata')
 
+def _get_filepath(fname):
+    return os.path.join(TESTDATA, fname)
 
-# Conditionally convert to bytes.  Works on Python 2 and Python 3.
-try:
-    bytes('', 'ascii')
-    def strtobytes(x): return bytes(x, 'iso8859-1')
-    def bytestostr(x): return str(x, 'iso8859-1')
-except:
-    strtobytes = str
-    bytestostr = str
-    
-try:
-    itertools.count(1,2)
-    icount = itertools.count
-except TypeError:
-    def icount(start, step):
-        counter = itertools.count(start)
-        while True:
-            thing = counter.next()
-            if (thing - start) % step == 0:
-                yield thing
+BLACK = Color(0, 0, 0, 255)
+ALMOST_BLACK = Color(8, 8,8 , 255)
+WHITE = Color(255, 255, 255, 255)
 
-def irange(start, stop, step):
-    """
-    like range, but returns an iterator
-    """
-    return itertools.islice(icount(start, step), (stop-start+step-1)//step)
+class JPGTests(unittest.TestCase):
+    def test_decode(self):
+        img = Image.open_from_path(_get_filepath('black-white-100.jpg'))
+        self.assertEqual(img.get_color(0, 0), BLACK)
+        # TODO: Is this correct? Is this just JPEG being JPEG or is the decoder
+        #       buggy? 1/1 SHOULD be BLACK but it's 8 8 8.
+        self.assertEqual(img.get_color(1, 1), ALMOST_BLACK)
+        self.assertEqual(img.get_color(0, 1), WHITE)
+        self.assertEqual(img.get_color(1, 0), WHITE)

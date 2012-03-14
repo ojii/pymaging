@@ -28,7 +28,6 @@ from pymaging.utils import fdiv
 
 
 def _mixin_alpha(colors, alpha):
-    from pymaging.utils import fdiv
     ratio = fdiv(alpha, 255)
     return [int(round(color *  ratio)) for color in colors]
 
@@ -58,6 +57,9 @@ class Color(object):
 
     @classmethod
     def from_pixel(cls, pixel):
+        """
+        Convert a pixel (list of 3-4 values) to a Color instance.
+        """
         assert len(pixel) in (3,4), "Color.from_pixel only supports 3 and 4 value pixels"
         pixel = list(pixel)
         if len(pixel) == 3:
@@ -66,6 +68,9 @@ class Color(object):
     
     @classmethod
     def from_hexcode(cls, hexcode):
+        """
+        Convert hexcode to RGB/RGBA.
+        """
         hexcode = hexcode.strip('#')
         assert len(hexcode) in (3,4,6,8), "Hex codes must be 3, 4, 6 or 8 characters long"
         if len(hexcode) in (3,4):
@@ -78,27 +83,40 @@ class Color(object):
         """
         Brightness is a float between 0 and 1
         """
-        return Color(self.red, self.green, self.blue, int(self.alpha * brightness))
+        return Color(self.red, self.green, self.blue, int(round(self.alpha * brightness)))
     
     def cover_with(self, base):
         """
         Mix the two colors respecting their alpha value.
         """
-        srca = fdiv(base.alpha, 255)
-        dsta = fdiv(self.alpha, 255)
+        srca = fdiv(base.alpha + 1, 256)
+        dsta = fdiv(self.alpha + 1, 256)
         outa = srca + dsta * (1 - srca)
 
-        srcr, srcg, srcb = base.red, base.green, base.blue
-        dstr, dstg, dstb = self.red, self.green, self.blue
+        srcr, srcg, srcb = base.red + 1, base.green + 1, base.blue + 1
+        dstr, dstg, dstb = self.red + 1, self.green + 1, self.blue + 1
+        
+        print(srcr, srcg, srcb, srca)
+        print(dstr, dstg, dstb, dsta)
 
         outr = (srcr * srca + dstr * dsta * (1 - srca)) / outa
         outg = (srcg * srca + dstg * dsta * (1 - srca)) / outa
         outb = (srcb * srca + dstb * dsta * (1 - srca)) / outa
 
-        return Color(*map(int, [outr, outg, outb, outa * 255]))
+        print(outr, outg, outb, outa)
+        
+        red = int(round(outr)) - 1
+        green = int(round(outg)) - 1
+        blue = int(round(outb)) - 1
+        alpha = int(round(outa * 256)) - 1
+
+        return Color(red, green, blue, alpha)
         
     
     def to_pixel(self, pixelsize):
+        """
+        Convert to pixel (list of 3-4 values)
+        """
         assert pixelsize in (3,4), "Color.to_pixel only supports 3 and 4 value pixels"
         if pixelsize == 3:
             return _mixin_alpha([self.red, self.green, self.blue], self.alpha)
@@ -106,6 +124,9 @@ class Color(object):
             return [self.red, self.green, self.blue, self.alpha]
     
     def to_hexcode(self):
+        """
+        Convert to RGBA hexcode
+        """
         return ''.join(hex(x)[2:] for x in (self.red, self.green, self.blue, self.alpha))
         
 

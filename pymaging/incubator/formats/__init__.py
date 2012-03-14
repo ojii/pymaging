@@ -23,10 +23,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pymaging.incubator.formats.jpeg import JPEG
+from pymaging.incubator.formats.jpg import JPG
 from pymaging.incubator.formats.png import PNG
 
-INCUBATOR_FORMATS = {
-    'png': PNG,
-    'jpg': JPEG,
-}
+INCUBATOR_FORMATS = [
+    PNG,
+    JPG,
+]

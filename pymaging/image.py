@@ -50,7 +50,7 @@ class Image(object):
     @classmethod
     def open(cls, fileobj):
         for format in get_format_objects():
-            image = format.open(fileobj)
+            image = format.decode(fileobj)
             if image:
                 return image
         raise FormatNotSupported()

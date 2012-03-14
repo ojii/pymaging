@@ -23,21 +23,31 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from collections import namedtuple
+
+Format = namedtuple('Format', 'decode encode extensions')
 
 
 class FormatRegistry(object):
     def __init__(self):
         self._loaded = False
-        self.registry = {}
+        self.names = {}
+        self.formats = []
     
     def _load(self):
         if self._loaded:
             return
         import pkg_resources
         from pymaging.incubator.formats import INCUBATOR_FORMATS
-        for entry_point in pkg_resources.iter_entry_points('notpil.formats'):
-            self.registry[entry_point.name] = entry_point.load()
-        self.registry.update(INCUBATOR_FORMATS)
+        for entry_point in pkg_resources.iter_entry_points('pymaging.formats'):
+            format = entry_point.load()
+            self.formats.append(format)
+            for extension in format.extensions:
+                self.names[extension] = format
+        for format in INCUBATOR_FORMATS:
+            self.formats.append(format)
+            for extension in format.extensions:
+                self.names[extension] = format
         self._loaded = True
         
     def get_formats(self):
@@ -46,11 +56,11 @@ class FormatRegistry(object):
     
     def get_format_objects(self):
         self._load()
-        return self.registry.values()
+        return self.formats
     
     def get_format(self, format):
         self._load()
-        return self.registry.get(format, None)
+        return self.names.get(format, None)
 
 registry = FormatRegistry()
 get_formats = registry.get_formats
