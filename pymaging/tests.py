@@ -25,7 +25,7 @@
 from __future__ import absolute_import
 from pymaging.colors import Color, ColorType
 from pymaging.image import Image
-from pymaging.shapes import Line, Pixel, AntiAliasedLine
+from pymaging.shapes import Line, Pixel
 import array
 import itertools
 import unittest
@@ -87,6 +87,12 @@ class BasicTests(PymagingBaseTestCase):
             [WHITE, BLACK],
             [BLACK, BLACK],
         ])
+        
+    def test_color_mix_with(self):
+        base = RED
+        color = GREEN.get_for_brightness(0.5)
+        result = base.cover_with(color)
+        self.assertEqual(result, Color(127, 127, 0, 255))
 
 
 class ResizeCropTests(PymagingBaseTestCase):
@@ -115,6 +121,13 @@ class DrawTests(PymagingBaseTestCase):
             [WHITE, BLACK],
             [BLACK, BLACK],
         ])
+        
+    def test_alpha_mixing(self):
+        img = image_factory([[RED]])
+        semi_transparent_green = GREEN.get_for_brightness(0.5)
+        img.draw(Pixel(0, 0), semi_transparent_green)
+        result = img.get_color(0, 0)
+        self.assertEqual(result, Color(127, 127, 0, 255))
         
     def test_draw_line_topleft_bottomright(self):
         img = image_factory([

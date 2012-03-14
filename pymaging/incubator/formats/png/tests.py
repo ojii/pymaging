@@ -58,4 +58,10 @@ class PNGTests(unittest.TestCase):
         self.assertEqual(img.get_color(1, 1), BLACK)
         self.assertEqual(img.get_color(0, 1), WHITE)
         self.assertEqual(img.get_color(1, 0), WHITE)
-
+        
+    def test_with_transparency(self):
+        img = Image.open_from_path(_get_filepath('black-white-with-transparency.png'))
+        self.assertEqual(img.get_color(0, 0), BLACK)
+        self.assertEqual(img.get_color(1, 0), WHITE)
+        self.assertEqual(img.get_color(1, 1), BLACK.get_for_brightness(0.5))
+        self.assertEqual(img.get_color(0, 1), WHITE.get_for_brightness(0.5))

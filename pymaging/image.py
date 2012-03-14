@@ -25,11 +25,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pymaging.colors import Color
-from pymaging.exceptions import FormatNotSupported
+from pymaging.exceptions import FormatNotSupported, InvalidColor
 from pymaging.formats import get_format, get_format_objects
 from pymaging.helpers import Fliprow
 from pymaging.resample import nearest
-from pymaging.utils import get_pixel, set_pixel
 import array
 import os
 
@@ -110,10 +109,31 @@ class Image(object):
         )
 
     def get_color(self, x, y):
-        return get_pixel(self.pixels, self.pixelsize, x, y, self.palette)
+        line = self.pixels[y]
+        if self.pixelsize == 1:
+            pixel = line[x]
+            if self.palette:
+                return Color.from_pixel(self.palette[pixel])
+            else:
+                return Color.from_pixel([pixel])
+        else:
+            start = x * self.pixelsize
+            return Color.from_pixel(line[start:start+self.pixelsize])
     
     def set_color(self, x, y, color):
-        set_pixel(self.pixels, self.pixelsize, x, y, self.get_reverse_palette(), color)
+        if color.alpha != 255:
+            base = self.get_color(x, y)
+            color = base.cover_with(color)
+        if self.reverse_palette and self.pixelsize == 1:
+            if color not in self.reverse_palette:
+                raise InvalidColor(str(color))
+            index = self.reverse_palette[color]
+            self.pixels[y][x] = index
+        else:
+            start = x * self.pixelsize
+            end = start + self.pixelsize
+            pixel = color.to_pixel(self.pixelsize)
+            self.pixels[y][start:end] = array.array('B', pixel)
 
     def flip_top_bottom(self):
         """

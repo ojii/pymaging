@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from collections import namedtuple
+from pymaging.utils import fdiv
 
 
 def _mixin_alpha(colors, alpha):
@@ -77,7 +78,25 @@ class Color(object):
         """
         Brightness is a float between 0 and 1
         """
-        return Color(self.red, self.green, self.blue, int(round(self.alpha * brightness)))
+        return Color(self.red, self.green, self.blue, int(self.alpha * brightness))
+    
+    def cover_with(self, base):
+        """
+        Mix the two colors respecting their alpha value.
+        """
+        srca = fdiv(base.alpha, 255)
+        dsta = fdiv(self.alpha, 255)
+        outa = srca + dsta * (1 - srca)
+
+        srcr, srcg, srcb = base.red, base.green, base.blue
+        dstr, dstg, dstb = self.red, self.green, self.blue
+
+        outr = (srcr * srca + dstr * dsta * (1 - srca)) / outa
+        outg = (srcg * srca + dstg * dsta * (1 - srca)) / outa
+        outb = (srcb * srca + dstb * dsta * (1 - srca)) / outa
+
+        return Color(*map(int, [outr, outg, outb, outa * 255]))
+        
     
     def to_pixel(self, pixelsize):
         assert pixelsize in (3,4), "Color.to_pixel only supports 3 and 4 value pixels"
