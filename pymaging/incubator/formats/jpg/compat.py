@@ -31,8 +31,3 @@ if sys.version < '3':
         return ord(thing)
 else:
     byteord = lambda thing: thing
-    
-try:
-    from functools import reduce as freduce
-except:
-    freduce = reduce

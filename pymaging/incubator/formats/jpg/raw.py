@@ -25,7 +25,8 @@ Based on C++ code by Dr. Tony Lin:
 *****************************************************************************/
 """
 # The license is based off the license used by libjpeg
-from pymaging.incubator.formats.jpg.compat import byteord, freduce
+from pymaging.incubator.formats.jpg.compat import byteord
+from functools import reduce
 
 
 # JPEG marker codes
@@ -248,12 +249,14 @@ class TonyJpegDecoder:
   def ReadByte(self):
     byte = self.Data[self.DataPos]
     self.DataPos += 1
-    return byteord(byte)
+    output = byteord(byte)
+    return output
 
   def ReadWord(self):
     byte1, byte2 = self.Data[self.DataPos:self.DataPos+2]
     self.DataPos += 2
-    return (byteord(byte1)<<8) + byteord(byte2)
+    output = (byteord(byte1)<<8) + byteord(byte2)
+    return output
 
   def ReadOneMarker(self):
     """read exact marker, two bytes, no stuffing allowed"""
@@ -665,7 +668,7 @@ class TonyJpegDecoder:
     cyTile = (self.Height + self.McuSize - 1) / self.McuSize
 
     #    BMP row width, must be divided by 4
-    nRowBytes = (self.Width * 3 + 3) / 4 * 4
+    nRowBytes = (self.Width * 3 + 3) // 4 * 4
 
     # FIXME: source ptr (don't need to read as we already read the header)
     # self.Data = inbuf
@@ -750,7 +753,7 @@ class TonyJpegDecoder:
     for j in range(self.McuSize): # vertical axis
       for i in range(self.McuSize): # horizontal axis:
         # block number is ((j/2) * 8 + i/2)={0, 1, 2, 3}
-        blocknum = ((j/2) * 8 + i/2)
+        blocknum = ((j//2) * 8 + i//2)
         # if self.McuSize==8, will use py[0]
         pyindex = (j>>3) * 2 + (i>>3)
         y = pYCbCr[pyoffset[pyindex]]
@@ -806,7 +809,7 @@ class TonyJpegDecoder:
       # DC coefficient (with scale factor as needed).
       # With typical images and quantization tables, half or more of the
       # column DCT calculations can be simplified this way.
-      if freduce(int.__or__, map(int, [coeff[inptr+DCTSIZE*n] for n in range(1,8)])) == 0:
+      if reduce(int.__or__, map(int, [coeff[inptr+DCTSIZE*n] for n in range(1,8)])) == 0:
         """ AC terms all zero """
         dcval = coeff[inptr + DCTSIZE*0] * quant[quantptr+DCTSIZE*0]
             
@@ -898,7 +901,7 @@ class TonyJpegDecoder:
         # On machines with very fast multiplication, it's possible that the
         # test takes more time than it's worth.  In that case this section
         # may be commented out.
-        if freduce(int.__or__, workspace[wsptr+1:wsptr+8]) == 0:
+        if reduce(int.__or__, workspace[wsptr+1:wsptr+8]) == 0:
           # AC terms all zero
           dcval = range_limit[ (workspace[wsptr] >> 5) & RANGE_MASK]
           outbuf[outptr+0] = dcval
