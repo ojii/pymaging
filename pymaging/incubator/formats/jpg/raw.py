@@ -25,6 +25,7 @@ Based on C++ code by Dr. Tony Lin:
 *****************************************************************************/
 """
 # The license is based off the license used by libjpeg
+from pymaging.incubator.formats.jpg.compat import byteord, freduce
 
 
 # JPEG marker codes
@@ -247,12 +248,12 @@ class TonyJpegDecoder:
   def ReadByte(self):
     byte = self.Data[self.DataPos]
     self.DataPos += 1
-    return ord(byte)
+    return byteord(byte)
 
   def ReadWord(self):
     byte1, byte2 = self.Data[self.DataPos:self.DataPos+2]
     self.DataPos += 2
-    return (ord(byte1)<<8) + ord(byte2)
+    return (byteord(byte1)<<8) + byteord(byte2)
 
   def ReadOneMarker(self):
     """read exact marker, two bytes, no stuffing allowed"""
@@ -475,7 +476,7 @@ class TonyJpegDecoder:
     # self.tblRange[512, ..., 895]: first half of post-IDCT table
     # self.tblRange[896, ..., 1280]: Second half of post-IDCT table
     # self.tblRange[1280, 1407] = self.tblRange[256, 384]
-    self.tblRange = [0]*256 + range(256) + [255]*(512-128) + [0]*384 + range(128)
+    self.tblRange = [0]*256 + list(range(256)) + [255]*(512-128) + [0]*384 + list(range(128))
 
     """YCbCr -> RGB conversion: most common case
     
@@ -670,9 +671,9 @@ class TonyJpegDecoder:
     # self.Data = inbuf
     # self.DataPos = 0
     #    Decompress all the tiles, or macroblocks, or MCUs
-    for yTile in range(cyTile):
+    for yTile in range(int(cyTile)):
       # print "decompressing row %d/%d" % (yTile, cyTile)
-      for xTile in range(cxTile):
+      for xTile in range(int(cxTile)):
             # Decompress one macroblock started from self.Data
             # This function will push self.Data ahead
             # Result is storing in byTile
@@ -754,8 +755,9 @@ class TonyJpegDecoder:
         pyindex = (j>>3) * 2 + (i>>3)
         y = pYCbCr[pyoffset[pyindex]]
         pyoffset[pyindex] += 1
-        cb = pYCbCr[pcboffset + blocknum]
-        cr = pYCbCr[pcroffset + blocknum]
+        iblocknum = int(blocknum)
+        cb = pYCbCr[pcboffset + iblocknum]
+        cr = pYCbCr[pcroffset + iblocknum]
         # print "blue", y, self.CbToB[cb], len(pYCbCr), len(range_limit)
         blue = range_limit[ y + self.CbToB[cb] ]
         green = range_limit[ y + ((self.CbToG[cb] + self.CrToG[cr]) >> 16) ]
@@ -804,7 +806,7 @@ class TonyJpegDecoder:
       # DC coefficient (with scale factor as needed).
       # With typical images and quantization tables, half or more of the
       # column DCT calculations can be simplified this way.
-      if reduce(int.__or__, map(int, [coeff[inptr+DCTSIZE*n] for n in range(1,8)])) == 0:
+      if freduce(int.__or__, map(int, [coeff[inptr+DCTSIZE*n] for n in range(1,8)])) == 0:
         """ AC terms all zero """
         dcval = coeff[inptr + DCTSIZE*0] * quant[quantptr+DCTSIZE*0]
             
@@ -896,7 +898,7 @@ class TonyJpegDecoder:
         # On machines with very fast multiplication, it's possible that the
         # test takes more time than it's worth.  In that case this section
         # may be commented out.
-        if reduce(int.__or__, workspace[wsptr+1:wsptr+8]) == 0:
+        if freduce(int.__or__, workspace[wsptr+1:wsptr+8]) == 0:
           # AC terms all zero
           dcval = range_limit[ (workspace[wsptr] >> 5) & RANGE_MASK]
           outbuf[outptr+0] = dcval
@@ -1053,14 +1055,14 @@ class TonyJpegDecoder:
               if (self.GetBits >= 0):
                   break
 
-            uc = ord(self.Data[self.DataPos])
+            uc = byteord(self.Data[self.DataPos])
             self.DataPos += 1
             self.DataBytesLeft -= 1
             
             # If it's 0xFF, check and discard stuffed zero byte
             if uc == 0xFF:
                 while uc == 0xFF:
-                    uc = ord(self.Data[self.DataPos])
+                    uc = byteord(self.Data[self.DataPos])
                     self.DataPos += 1
                     self.DataBytesLeft -= 1
                 
