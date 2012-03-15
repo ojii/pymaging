@@ -25,6 +25,7 @@
 from pymaging import Image
 from pymaging.colors import Color
 from pymaging.incubator.formats import register
+from pymaging.webcolors import Black, White
 import os
 import pymaging
 import unittest
@@ -34,9 +35,7 @@ TESTDATA = os.path.join(os.path.dirname(pymaging.__file__), '..', 'testdata')
 def _get_filepath(fname):
     return os.path.join(TESTDATA, fname)
 
-BLACK = Color(0, 0, 0, 255)
 ALMOST_BLACK = Color(8, 8,8 , 255)
-WHITE = Color(255, 255, 255, 255)
 
 class JPGTests(unittest.TestCase):
     def setUp(self):
@@ -44,9 +43,9 @@ class JPGTests(unittest.TestCase):
 
     def test_decode(self):
         img = Image.open_from_path(_get_filepath('black-white-100.jpg'))
-        self.assertEqual(img.get_color(0, 0), BLACK)
+        self.assertEqual(img.get_color(0, 0), Black)
         # TODO: Is this correct? Is this just JPEG being JPEG or is the decoder
         #       buggy? 1/1 SHOULD be BLACK but it's 8 8 8.
         self.assertEqual(img.get_color(1, 1), ALMOST_BLACK)
-        self.assertEqual(img.get_color(0, 1), WHITE)
-        self.assertEqual(img.get_color(1, 0), WHITE)
+        self.assertEqual(img.get_color(0, 1), White)
+        self.assertEqual(img.get_color(1, 0), White)
