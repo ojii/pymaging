@@ -34,7 +34,7 @@ def decode(fileobj):
     decoder = TonyJpegDecoder()
     jpegsrc = fileobj.read()
     try:
-        bmpout = decoder.DecompressImage(jpegsrc)
+        bmpout = decoder.decode(jpegsrc)
     except:
         fileobj.seek(0)
         return None

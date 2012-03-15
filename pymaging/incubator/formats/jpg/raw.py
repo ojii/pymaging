@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Based on C++ code by Dr. Tony Lin:
 /******************************************************************************
@@ -121,14 +119,15 @@ jpeg_natural_order = [
 ]
 
 
-class jpeg_component_info:
+class JPEGComponentInfo(object):
     component_id = 0        # identifier for this component (0..255)
     component_index = 0        # its index in SOF or cinfo->comp_info[]
     h_samp_factor = 0        # horizontal sampling factor (1..4)
     v_samp_factor = 0        # vertical sampling factor (1..4)
     quant_tbl_no = 0        # quantization table selector (0..3)
 
-class HUFFTABLE:
+
+class HuffTable(object):
     def __init__(self):
         self.mincode = [0]*17
         self.maxcode = [0]*18
@@ -138,7 +137,7 @@ class HUFFTABLE:
         self.look_nbits = [0]*256
         self.look_sym = [0]*256
 
-    def ComputeHuffmanTable(self):
+    def compute(self):
         """Compute the derived values for a Huffman table."""
         # Figure C.1: make table of Huffman code length for each symbol
         # Note that this is in code-length order.
@@ -200,7 +199,8 @@ class HUFFTABLE:
                     ctr -= 1
                 p += 1
 
-class TonyJpegDecoder:
+
+class TonyJpegDecoder(object):
     def __init__(self):
         """set up the decoder"""
         self.Quality = 0
@@ -214,10 +214,10 @@ class TonyJpegDecoder:
         # To speed up, we precompute two DCT quant tables
         self.qtblY = {}
         self.qtblCbCr = {}
-        self.htblYDC = HUFFTABLE()
-        self.htblYAC = HUFFTABLE()
-        self.htblCbCrDC = HUFFTABLE()
-        self.htblCbCrAC = HUFFTABLE()
+        self.htblYDC = HuffTable()
+        self.htblYAC = HuffTable()
+        self.htblCbCrDC = HuffTable()
+        self.htblCbCrAC = HuffTable()
         # per image parameters
         self.Width = 0
         self.Height = 0
@@ -237,43 +237,43 @@ class TonyJpegDecoder:
         self.restarts_to_go = 0
         self.unread_marker = 0
         self.next_restart_num = 0
-        self.comp_info = [jpeg_component_info(), jpeg_component_info(), jpeg_component_info()]
+        self.comp_info = [JPEGComponentInfo(), JPEGComponentInfo(), JPEGComponentInfo()]
 
-    def ReadJpgHeader(self, jpegsrc):
+    def read_headers(self, jpegsrc):
         """reads Width, Height, headsize"""
         self.read_markers(jpegsrc)
         if self.Width <= 0 or self.Height <= 0:
             raise ValueError("Error reading the file header")
         self.DataBytesLeft = len(jpegsrc) - self.DataPos
-        self.InitDecoder()
+        self.init_decoder()
 
-    def ReadByte(self):
+    def read_byte(self):
         byte = self.Data[self.DataPos]
         self.DataPos += 1
         output = byteord(byte)
         return output
 
-    def ReadWord(self):
+    def read_word(self):
         byte1, byte2 = self.Data[self.DataPos:self.DataPos+2]
         self.DataPos += 2
         output = (byteord(byte1)<<8) + byteord(byte2)
         return output
 
-    def ReadOneMarker(self):
+    def read_one_marker(self):
         """read exact marker, two bytes, no stuffing allowed"""
-        if self.ReadByte() != 255:
+        if self.read_byte() != 255:
             raise ValueError("error reading one marker")
-        return self.ReadByte()
+        return self.read_byte()
 
-    def SkipMarker(self):
+    def skip_marker(self):
         """Skip over an unknown or uninteresting variable-length marker"""
-        length = self.ReadWord()
+        length = self.read_word()
         self.DataPos += length - 2
 
-    def GetDqt(self):
-        length = self.ReadWord() - 2
+    def get_dqt(self):
+        length = self.read_word() - 2
         while length > 0:
-            n = self.ReadByte()
+            n = self.read_byte()
             length -= 1
             n &= 0x0F
             if n == 0:
@@ -281,26 +281,26 @@ class TonyJpegDecoder:
             else:
                 qtb = self.qtblCbCr
             for i in range(64):
-                qtb[jpeg_natural_order[i]] = self.ReadByte()
+                qtb[jpeg_natural_order[i]] = self.read_byte()
             length -= 64
 
 
     def get_sof (self, is_prog, is_arith):
         """get Width and Height, and component info"""
-        length = self.ReadWord()
-        self.Precision = self.ReadByte()
-        self.Height = self.ReadWord()
-        self.Width = self.ReadWord()
-        self.Component = self.ReadByte()
+        length = self.read_word()
+        self.Precision = self.read_byte()
+        self.Height = self.read_word()
+        self.Width = self.read_word()
+        self.Component = self.read_byte()
         length -= 8
         for ci in range(self.Component):
-            comp = jpeg_component_info()
+            comp = JPEGComponentInfo()
             comp.component_index = ci
-            comp.component_id = self.ReadByte()
-            c = self.ReadByte()
+            comp.component_id = self.read_byte()
+            c = self.read_byte()
             comp.h_samp_factor = (c >> 4) & 15
             comp.v_samp_factor = (c     ) & 15
-            comp.quant_tbl_no = self.ReadByte()
+            comp.quant_tbl_no = self.read_byte()
             self.comp_info[ci] = comp
         if self.comp_info[0].h_samp_factor == 1 and self.comp_info[0].v_samp_factor == 1:
             self.McuSize = 8
@@ -310,19 +310,19 @@ class TonyJpegDecoder:
             self.BlocksInMcu = 6
 
     def get_dht(self):
-        length = self.ReadWord() - 2
+        length = self.read_word() - 2
         while length > 0:
-            index = self.ReadByte()
-            htbl = HUFFTABLE()
+            index = self.read_byte()
+            htbl = HuffTable()
             count = 0
             # read in bits[]
             htbl.bits[0] = 0
             for i in range(1, 17):
-                htbl.bits[i] = self.ReadByte()
+                htbl.bits[i] = self.read_byte()
                 count += htbl.bits[i]
             # read in huffval
             for i in range(count):
-                htbl.huffval[i] = self.ReadByte()
+                htbl.huffval[i] = self.read_byte()
             length -= count + 17
             if index == 0:
                 self.htblYDC = htbl
@@ -334,24 +334,24 @@ class TonyJpegDecoder:
                 self.htblCbCrAC = htbl
 
     def get_sos(self):
-        self.ReadWord()
+        self.read_word()
         # number of components
-        n = self.ReadByte()
+        n = self.read_byte()
         # Collect the component-spec parameters
         for _ in range(n):
-            self.ReadByte()
-            self.ReadByte()
+            self.read_byte()
+            self.read_byte()
             # find the match comp_id; Current we do nothing
             # (the C code here is commented out)
         # Collect the additional scan parameters Ss, Se, Ah/Al.
-        self.ReadByte()
-        self.ReadByte()
-        self.ReadByte()
+        self.read_byte()
+        self.read_byte()
+        self.read_byte()
         self.next_restart_num = 0
 
     def get_dri(self):
-        self.length = self.ReadWord()
-        self.restart_interval = self.ReadWord()
+        self.length = self.read_word()
+        self.restart_interval = self.read_word()
         self.restarts_to_go = self.restart_interval
 
     def read_markers(self, inbuf):
@@ -359,7 +359,7 @@ class TonyJpegDecoder:
         self.Data = inbuf
         while True:
             # IJG use first_marker() and next_marker()
-            marker = self.ReadOneMarker()
+            marker = self.read_one_marker()
             # read more info according to the marker
             # the order of cases is in jpg file made by ms paint
             if marker == M_SOI:
@@ -367,10 +367,10 @@ class TonyJpegDecoder:
                 #   return -1  # JPEG_SUSPENDED
                 pass
             elif marker in (M_APP0, M_APP1, M_APP2, M_APP3, M_APP4, M_APP5, M_APP6, M_APP7, M_APP8, M_APP9, M_APP10, M_APP11, M_APP12, M_APP13, M_APP14, M_APP15):
-                self.SkipMarker() # JFIF APP0 marker, or Adobe APP14 marker
+                self.skip_marker() # JFIF APP0 marker, or Adobe APP14 marker
             elif marker == M_DQT:
                 # maybe twice, one for Y, another for Cb/Cr
-                self.GetDqt()
+                self.get_dqt()
             elif marker in (M_SOF0, M_SOF1): # Baseline, Extended sequential (Huffman)
                 self.get_sof(False, False)
             elif marker == M_SOF2:
@@ -391,7 +391,7 @@ class TonyJpegDecoder:
                 return
             elif marker == M_COM:
                 # the following marker are not needed for jpg made by ms paint
-                self.SkipMarker()
+                self.skip_marker()
             elif marker == M_DRI:
                 self.get_dri()
             # elif marker in (M_SOF3, M_SOF5, M_SOF6, M_SOF7, M_JPG, M_SOF11, M_SOF13, M_SOF14, M_SOF15):
@@ -426,7 +426,7 @@ class TonyJpegDecoder:
         # Obtain a marker unless we already did.
         # Note that next_marker will complain if it skips any data.
         if self.unread_marker == 0:
-            self.unread_marker = self.ReadOneMarker()
+            self.unread_marker = self.read_one_marker()
         if self.unread_marker == M_RST0 + self.next_restart_num:
             # Normal case --- swallow the marker and let entropy decoder continue
             self.unread_marker = 0
@@ -438,7 +438,7 @@ class TonyJpegDecoder:
             pass
         self.next_restart_num = (self.next_restart_num + 1) & 7
 
-    def InitDecoder(self):
+    def init_decoder(self):
         """
         Prepare for all the tables needed,
         eg. quantization tables, huff tables, color convert tables
@@ -451,15 +451,15 @@ class TonyJpegDecoder:
         self.dcCb = 0
         self.dcCr = 0
         # prepare range limiting table to limit idct outputs
-        self.SetRangeTable()
+        self.set_range_table()
         # convert table, from bgr to ycbcr
-        self.InitColorTable()
+        self.init_color_table()
         # prepare two quant tables, one for Y, and another for CbCr
-        self.InitQuantTable()
+        self.init_quant_table()
         # prepare four huffman tables:
-        self.InitHuffmanTable()
+        self.init_huffman_table()
 
-    def SetRangeTable(self):
+    def set_range_table(self):
         """
         prepare_range_limit_table(): Set self.tblRange[5*256+128 = 1408]
         range table is used for range limiting of idct results
@@ -505,7 +505,7 @@ class TonyJpegDecoder:
         together before rounding.
         """
 
-    def InitColorTable(self):
+    def init_color_table(self):
         # i is the actual input pixel value, in the range 0..MAXJSAMPLE
         nScale = 1 << 16 # equal to pow(2,16)
         nHalf = nScale >> 1
@@ -523,8 +523,8 @@ class TonyJpegDecoder:
             # Cb=>G value is scaled-up -0.34414 * x
             self.CbToG[i] = (int) (- FIX(0.34414) * x + nHalf)
 
-    def InitQuantTable(self):
-        """InitQuantTable will produce customized quantization table into: self.tblYQuant[0..63] and self.tblCbCrQuant[0..63]"""
+    def init_quant_table(self):
+        """init_quant_table will produce customized quantization table into: self.tblYQuant[0..63] and self.tblCbCrQuant[0..63]"""
         # These are the sample quantization tables given in JPEG spec section K.1.
         # The spec says that the values given produce "good" quality, and
         # when divided by 2, "very good" quality.
@@ -554,21 +554,21 @@ class TonyJpegDecoder:
         # self.qtblY = ScaleQuantTable(std_luminance_quant_tbl, aanscales)
         # self.qtblCbCr = ScaleQuantTable(std_chrominance_quant_tbl, aanscales)
 
-    def InitHuffmanTable(self):
+    def init_huffman_table(self):
         """Prepare four Huffman tables:
            HUFFMAN_TABLE self.htblYDC, self.htblYAC, self.htblCbCrDC, self.htblCbCrAC"""
         #    Using dht got from jpeg file header
-        self.htblYDC.ComputeHuffmanTable()
-        self.htblYAC.ComputeHuffmanTable()
-        self.htblCbCrDC.ComputeHuffmanTable()
-        self.htblCbCrAC.ComputeHuffmanTable()
+        self.htblYDC.compute()
+        self.htblYAC.compute()
+        self.htblCbCrDC.compute()
+        self.htblCbCrAC.compute()
 
 
-    def DecompressImage(self, inbuf):
-        """DecompressImage(), the main function in this class !!
+    def decode(self, inbuf):
+        """decode(), the main function in this class !!
            inbuf is source data in jpg format
            return is bmp bgr format, bottom_up"""
-        self.ReadJpgHeader(inbuf)
+        self.read_headers(inbuf)
         outbuf = [0] * (self.Width * self.Height * 3)
         #    horizontal and vertical count of tile, macroblocks,
         #    MCU(Minimum Coded Unit),
@@ -590,7 +590,7 @@ class TonyJpegDecoder:
             # Decompress one macroblock started from self.Data
             # This function will push self.Data ahead
             # Result is storing in byTile
-                byTile = self.DecompressOneTile()
+                byTile = self.decompress_one_tile()
 
                 #    Get tile starting pixel position
                 xPixel = xTile * self.McuSize
@@ -618,7 +618,7 @@ class TonyJpegDecoder:
 #    source is self.Data
 #    This function will push self.Data ahead for next tile
 
-    def DecompressOneTile(self):
+    def decompress_one_tile(self):
         """decompress one 16*16 pixel tile. returns output in BGR format, 16*16*3"""
         # Process restart marker if needed; may have to suspend
         if self.restart_interval:
@@ -633,11 +633,11 @@ class TonyJpegDecoder:
         #    if self.BlocksInMcu==6,  Y: 4 blocks; Cb: 1 block; Cr: 1 block
         #    if self.BlocksInMcu==3,  Y: 1 block; Cb: 1 block; Cr: 1 block
         for i in range(self.BlocksInMcu):
-            coeff = self.HuffmanDecode(i)    # source is self.Data
+            coeff = self.huffman_decode(i)    # source is self.Data
             # print "huff[%d]: %s" % (i, " ".join(["%02x" % coeff[i] for i in range(64)]))
-            pYCbCr += self.InverseDct(coeff, i)    # De-scale and inverse dct
+            pYCbCr += self.inverse_dct(coeff, i)    # De-scale and inverse dct
         #    Color conversion and up-sampling
-        tileoutput = self.YCbCrToBGREx(pYCbCr)
+        tileoutput = self.YCbCr_to_BGREx(pYCbCr)
         # print "pbgr[%d]: %s" % (self.DataPos, " ".join(["%02x" % i for i in tileoutput]))
 
         # Account for restart interval (no-op if not using restarts)
@@ -649,7 +649,7 @@ class TonyJpegDecoder:
 # //////////////////////////////////////////////////////////////////////////////
 #    if self.BlocksInMcu==3, no need to up-sampling
 
-    def YCbCrToBGREx(self, pYCbCr):
+    def YCbCr_to_BGREx(self, pYCbCr):
         """Color conversion and up-sampling
         in, Y: 256 or 64 bytes; Cb: 64 bytes; Cr: 64 bytes
         out, BGR format, 16*16*3 = 768 bytes; or 8*8*3=192 bytes"""
@@ -681,7 +681,7 @@ class TonyJpegDecoder:
                 pByte += [blue, green, red]
         return pByte
 
-    def InverseDct(self, coeff, nBlock):
+    def inverse_dct(self, coeff, nBlock):
         """AA&N DCT algorithm implemention
             coeff             # in, dct coefficients, length = 64
             data             # out, 64 bytes
@@ -871,7 +871,7 @@ class TonyJpegDecoder:
 
         return outbuf
 
-    def HuffmanDecode(self, iBlock):
+    def huffman_decode(self, iBlock):
         """source is self.Data
             out DCT coefficients
             iBlock  0,1,2,3:Y; 4:Cb; 5:Cr; or 0:Y;1:Cb;2:Cr"""
@@ -890,11 +890,11 @@ class TonyJpegDecoder:
         coeff = [0]*64
 
         # Section F.2.2.1: decode the DC coefficient difference
-        s = self.GetCategory(dctbl)             # get dc category number, s
+        s = self.get_category(dctbl)             # get dc category number, s
 
         if s:
-            r = self.DoGetBits(s)                 # get offset in this dc category
-            s = self.ValueFromCategory(s, r)    # get dc difference value
+            r = self.do_get_bits(s)                 # get offset in this dc category
+            s = self.value_from_category(s, r)    # get dc difference value
 
         # Convert DC difference to actual value, update last_dc_val
         s += getattr(self, LastDC)
@@ -907,14 +907,14 @@ class TonyJpegDecoder:
         # Since zeroes are skipped, output area must be cleared beforehand
         k = 1
         while k < 64:
-            s = self.GetCategory( actbl )    # s: (run, category)
+            s = self.get_category( actbl )    # s: (run, category)
             r = s >> 4                       #    r: run length for ac zero, 0 <= r < 16
             s &= 15                          #    s: category for this non-zero ac
 
             if s:
                 k += r                       #    k: position for next non-zero ac
-                r = self.DoGetBits(s)               #    r: offset in this ac category
-                s = self.ValueFromCategory(s, r)  #    s: ac value
+                r = self.do_get_bits(s)               #    r: offset in this ac category
+                s = self.value_from_category(s, r)  #    s: ac value
 
                 coeff[ jpeg_natural_order[ k ] ] = s
             else: # s = 0, means ac value is 0 ? Only if r = 15.
@@ -925,7 +925,7 @@ class TonyJpegDecoder:
 
         return coeff
 
-    def GetCategory(self, htbl):
+    def get_category(self, htbl):
         """get category number for dc, or (0 run length, ac category) for ac"""
         #    The max length for Huffman codes is 15 bits; so we use 32 bits buffer
         #    self.GetBuff, with the validated length is self.GetBits.
@@ -934,11 +934,11 @@ class TonyJpegDecoder:
 
         #    If left bits < 8, we should get more data
         if self.GetBits < 8:
-            self.FillBitBuffer()
+            self.fill_bit_buffer()
 
         #    Call special process if data finished; min bits is 1
         if self.GetBits < 8:
-            return self.SpecialDecode(htbl, 1)
+            return self.special_decode(htbl, 1)
 
         #    Peek the first valid byte
         look = ((self.GetBuff>>(self.GetBits - 8))& 0xFF)
@@ -949,9 +949,9 @@ class TonyJpegDecoder:
             return htbl.look_sym[look]
         else:
             # Decode long codes with length >= 9
-            return self.SpecialDecode(htbl, 9)
+            return self.special_decode(htbl, 9)
 
-    def FillBitBuffer(self):
+    def fill_bit_buffer(self):
         while self.GetBits < 25:    # #define MIN_GET_BITS  (32-7)
             if self.DataBytesLeft > 0: # Are there some data?
                 # Attempt to read a byte
@@ -995,15 +995,15 @@ class TonyJpegDecoder:
             else:
                 break
 
-    def DoGetBits(self, nbits):
+    def do_get_bits(self, nbits):
         if self.GetBits < nbits:
             # we should read nbits bits to get next data
-            self.FillBitBuffer()
+            self.fill_bit_buffer()
         self.GetBits -= nbits
         return (self.GetBuff >> self.GetBits) & ((1<<nbits)-1)
 
 
-    def SpecialDecode(self, htbl, nMinBits):
+    def special_decode(self, htbl, nMinBits):
         """Special Huffman decode:
         (1) For codes with length > 8
         (2) For codes with length < 8 while data is finished"""
@@ -1012,13 +1012,13 @@ class TonyJpegDecoder:
         # HUFF_DECODE has determined that the code is at least min_bits
         # bits long, so fetch that many bits in one swoop.
 
-        code = self.DoGetBits(l)
+        code = self.do_get_bits(l)
 
         # Collect the rest of the Huffman code one bit at a time.
         # This is per Figure F.16 in the JPEG spec.
         while code > htbl.maxcode[l]:
             code <<= 1
-            code |= self.DoGetBits(1)
+            code |= self.do_get_bits(1)
             l += 1
 
         # With garbage input we may reach the sentinel value l = 17.
@@ -1027,7 +1027,7 @@ class TonyJpegDecoder:
 
         return htbl.huffval[ htbl.valptr[l] + (code - htbl.mincode[l]) ]
 
-    def ValueFromCategory(self, nCate, nOffset):
+    def value_from_category(self, nCate, nOffset):
         """To find dc or ac value according to category and category offset"""
         # Method 1:
         # On some machines, a shift and add will be faster than a table lookup.
