@@ -72,8 +72,9 @@ class BMPDecoder(object):
         self.filelength = struct.unpack('<i', self.fileobj.read(4))[0]
         self.fileobj.read(4) # reserved/unused stuff
         self.offset = struct.unpack('<i', self.fileobj.read(4))[0]
+        pre_header = self.fileobj.tell()
         headersize = struct.unpack('<i', self.fileobj.read(4))[0]
-        palette_start = self.fileobj.tell() + headersize
+        palette_start = pre_header + headersize
         HEADERS[headersize](self)
         self.row_size = ((self.bits_per_pixel * self.width) // 32) * 4
         # there might be header stuff that wasn't read, so skip ahead to the 
