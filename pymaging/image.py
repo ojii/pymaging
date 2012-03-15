@@ -68,7 +68,7 @@ class Image(object):
         format_object = get_format(format)
         if not format_object:
             raise FormatNotSupported(format)
-        format_object.save(self, fileobj)
+        format_object.encode(self, fileobj)
 
     def save_to_path(self, filepath, format=None):
         if not format:
