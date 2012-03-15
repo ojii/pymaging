@@ -63,32 +63,41 @@ class BMPDecoder(object):
         self.read_header()
     
     def read_header(self):
-        magic = struct.unpack('<bb', self.fileobj.read(2))
+        magic = struct.unpack('<bb', self.fileobj.  read(2))
         assert magic == (66, 77), magic
         self.filelength = struct.unpack('<i', self.fileobj.read(4))[0]
-        struct.unpack('<bbbb', self.fileobj.read(4)) # reserved/unused stuff
+        self.fileobj.read(4) # reserved/unused stuff
         self.offset = struct.unpack('<i', self.fileobj.read(4))[0]
         headersize = struct.unpack('<i', self.fileobj.read(4))[0]
         palette_start = self.fileobj.tell() + headersize
         HEADERS[headersize](self)
         self.row_size = ((self.bits_per_pixel * self.width) // 32) * 4
-        self.fileobj.seek(palette_start)
-        self.palette = []
+        # there might be header stuff that wasn't read, so skip ahead to the 
+        # start of the color palette
+        self.fileobj.seek(palette_start) 
+        palette = []
         for _ in range(self.ncolors):
             red, green, blue, _ = struct.unpack('<BBBB', self.fileobj.read(4))
-            self.palette.append((red, green, blue))
+            palette.append((red, green, blue))
+        # set palette to None instead of empty list when there's no palette
+        self.palette = palette or None
     
     def read_row_32bit(self):
         row = array.array('B')
         for _ in range(self.width):
-            self.fileobj.read(1)
-            row.fromfile(self.fileobj, 3)
+            # not sure what the first thing is used for 
+            _, b, g, r =  struct.unpack('<BBBB', self.fileobj.read(4))
+            row.extend([r, g, b]) # bgr->rgb
         return row
     
     def get_image(self):
+        # go to the start of the pixel array
         self.fileobj.seek(self.offset)
+        # since bmps are stored upside down, initialize a pixel list
         pixels = [None for _ in range(self.height)]
+        # iterate BACKWARDS over the line indices so we don't have to reverse
+        # later. this is why we intialize pixels above.
         for index in range(self.height - 1, -1, -1):
             pixels[index] = self.read_row()
+        # TODO: Not necessarily RGB
         return Image(self.width, self.height, pixels, RGB, palette=self.palette)
-        
