@@ -45,3 +45,16 @@ class BMPTests(unittest.TestCase):
         self.assertEqual(img.get_color(1, 0), GREEN)
         self.assertEqual(img.get_color(0, 1), BLUE)
         self.assertEqual(img.get_color(1, 1), BLACK)
+    
+    def test_24bit_bmp_decoding(self):
+        with open(_get_filepath('black-white-24bit.bmp'), 'rb') as fobj:
+            decoder = BMPDecoder(fobj)
+            img = decoder.get_image()
+        self.assertEqual(img.width, 2)
+        self.assertEqual(img.height, 2)
+        self.assertEqual(img.palette, None)
+        self.assertEqual(decoder.bits_per_pixel, 24)
+        self.assertEqual(img.get_color(0, 0), BLACK)
+        self.assertEqual(img.get_color(1, 1), BLACK)
+        self.assertEqual(img.get_color(0, 1), WHITE)
+        self.assertEqual(img.get_color(1, 0), WHITE)

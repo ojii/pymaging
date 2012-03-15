@@ -36,6 +36,8 @@ def BITMAPINFOHEADER(decoder):
     assert nplanes == 1, nplanes
     if decoder.bits_per_pixel == 32:
         decoder.read_row = decoder.read_row_32bit
+    elif decoder.bits_per_pixel == 24:
+        decoder.read_row = decoder.read_row_24bit
 
 def BITMAPV2INFOHEADER(decoder):
     BITMAPINFOHEADER(decoder)
@@ -88,6 +90,13 @@ class BMPDecoder(object):
             # not sure what the first thing is used for 
             _, b, g, r =  struct.unpack('<BBBB', self.fileobj.read(4))
             row.extend([r, g, b]) # bgr->rgb
+        return row
+    
+    def read_row_24bit(self):
+        row = array.array('B')
+        rowlength = self.width * 3
+        row.fromfile(self.fileobj, rowlength)
+        self.fileobj.read(rowlength % 4) # padding
         return row
     
     def get_image(self):
