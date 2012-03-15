@@ -109,13 +109,11 @@ class BMPDecoder(object):
         bits = []
         for ch in self.fileobj.read(rowlength):
             b = ord(ch)
-            print "b =", bin(b)
             for i in range(8):
                 a, b = divmod(b, 128)
                 bits.append(a)
                 b <<= 1
         row.fromlist(bits[:self.width])
-        print bits[:self.width], self.palette
         return row
     
     def get_image(self):
