@@ -146,7 +146,7 @@ class HUFFTABLE:
         huffsize = [0]*257
         huffcode = [0]*257
         for l in range(1,17):
-            for i in range(1, self.bits[l] + 1):
+            for _ in range(1, self.bits[l] + 1):
                 huffsize[p] = l
                 p += 1
         huffsize[p] = 0
@@ -187,7 +187,7 @@ class HUFFTABLE:
         HUFF_LOOKAHEAD = 8
         p = 0
         for l in range(1, HUFF_LOOKAHEAD+1):
-            for i in range(1, self.bits[l]+1):
+            for _ in range(1, self.bits[l]+1):
                 """ l = current code's length,
                 p = its index in huffcode[] & huffval[]. Generate left-justified
                 code followed by all possible bit sequences """
@@ -275,7 +275,6 @@ class TonyJpegDecoder:
         while length > 0:
             n = self.ReadByte()
             length -= 1
-            prec = n >> 4
             n &= 0x0F
             if n == 0:
                 qtb = self.qtblY
@@ -335,22 +334,19 @@ class TonyJpegDecoder:
                 self.htblCbCrAC = htbl
 
     def get_sos(self):
-        length = self.ReadWord()
+        self.ReadWord()
         # number of components
         n = self.ReadByte()
         # Collect the component-spec parameters
-        cc, c, ci = 0, 0, 0
-        for i in range(n):
-            cc = self.ReadByte()
-            c = self.ReadByte()
+        for _ in range(n):
+            self.ReadByte()
+            self.ReadByte()
             # find the match comp_id; Current we do nothing
             # (the C code here is commented out)
         # Collect the additional scan parameters Ss, Se, Ah/Al.
-        Ss = self.ReadByte()
-        Se = self.ReadByte()
-        c = self.ReadByte()
-        Ah = (c >> 4) & 15
-        Al = (c     ) & 15
+        self.ReadByte()
+        self.ReadByte()
+        self.ReadByte()
         self.next_restart_num = 0
 
     def get_dri(self):
@@ -392,7 +388,6 @@ class TonyJpegDecoder:
             elif marker == M_SOS:
                 # Start of Scan
                 self.get_sos()
-                retval = 0 # reached SOS
                 return
             elif marker == M_COM:
                 # the following marker are not needed for jpg made by ms paint
@@ -875,10 +870,6 @@ class TonyJpegDecoder:
             wsptr += DCTSIZE   # advance pointer to next row
 
         return outbuf
-
-    # Below are difficult and complex HUFFMAN decoding !!!!!
-    def DumpHuffman(self, dctbl):
-        array2str = lambda array: " ".join(["%02x" % i for i in array])
 
     def HuffmanDecode(self, iBlock):
         """source is self.Data
