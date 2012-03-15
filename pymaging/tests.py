@@ -24,11 +24,16 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from __future__ import absolute_import
 from pymaging.colors import Color, ColorType
+from pymaging.exceptions import FormatNotSupported
 from pymaging.image import Image
 from pymaging.shapes import Line, Pixel
 import array
 import itertools
 import unittest
+try: # 2.x
+    from StringIO import StringIO
+except: # 3.x
+    from io import StringIO
 
 
 RED = Color(255, 0, 0, 255)
@@ -59,6 +64,9 @@ class BasicTests(PymagingBaseTestCase):
             [GREEN, BLUE, RED],
             [BLUE, RED, GREEN],
         ])
+        
+    def test_open_invalid_image(self):
+        self.assertRaises(FormatNotSupported, Image.open, StringIO(''))
 
     def test_crop(self):
         img = self._get_fake_image()

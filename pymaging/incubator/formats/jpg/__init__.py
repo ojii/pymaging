@@ -37,7 +37,7 @@ def decode(fileobj):
         bmpout = decoder.DecompressImage(jpegsrc)
     except:
         fileobj.seek(0)
-        raise
+        return None
     # bmpout is in bgr format, bottom to top. it has padding stuff.
     pixels = []
     for _ in range(0, decoder.Height):
