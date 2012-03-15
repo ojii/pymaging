@@ -82,7 +82,7 @@ class BMPDecoder(object):
         self.fileobj.seek(palette_start) 
         palette = []
         for _ in range(self.ncolors):
-            red, green, blue, _ = struct.unpack('<BBBB', self.fileobj.read(4))
+            blue, green, red, _ = struct.unpack('<BBBB', self.fileobj.read(4))
             palette.append((red, green, blue))
         # set palette to None instead of empty list when there's no palette
         self.palette = palette or None
@@ -107,9 +107,8 @@ class BMPDecoder(object):
         padding = 32 - (self.width % 32)
         rowlength = (self.width + padding) // 8
         bits = []
-        for ch in self.fileobj.read(rowlength):
-            b = ord(ch)
-            for i in range(8):
+        for b in struct.unpack('%sB' % rowlength, self.fileobj.read(rowlength)):
+            for _ in range(8):
                 a, b = divmod(b, 128)
                 bits.append(a)
                 b <<= 1

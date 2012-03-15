@@ -89,6 +89,19 @@ class BMPTests(unittest.TestCase):
         self.assertEqual(img.get_color(0, 1), White)
         self.assertEqual(img.get_color(1, 0), White)
     
+    def test_1bit_bmp_red_white_decoding(self):
+        with open(_get_filepath('red-white.bmp'), 'rb') as fobj:
+            decoder = BMPDecoder(fobj)
+            img = decoder.get_image()
+        self.assertEqual(img.width, 2)
+        self.assertEqual(img.height, 2)
+        self.assertNotEqual(img.palette, None)
+        self.assertEqual(decoder.bits_per_pixel, 1)
+        self.assertEqual(img.get_color(0, 0), Red)
+        self.assertEqual(img.get_color(1, 1), Red)
+        self.assertEqual(img.get_color(0, 1), White)
+        self.assertEqual(img.get_color(1, 0), White)
+    
     def test_1bit_bmp_decoding_horizontal(self):
         with open(_get_filepath('black-white-horizontal.bmp'), 'rb') as fobj:
             decoder = BMPDecoder(fobj)
