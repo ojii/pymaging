@@ -38,13 +38,8 @@ class FormatRegistry(object):
         if self._loaded:
             return
         import pkg_resources
-        from pymaging.incubator.formats import INCUBATOR_FORMATS
         for entry_point in pkg_resources.iter_entry_points('pymaging.formats'):
             format = entry_point.load()
-            self.formats.append(format)
-            for extension in format.extensions:
-                self.names[extension] = format
-        for format in INCUBATOR_FORMATS:
             self.formats.append(format)
             for extension in format.extensions:
                 self.names[extension] = format

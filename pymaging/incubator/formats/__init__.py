@@ -23,6 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from pymaging.formats import registry
 from pymaging.incubator.formats.jpg import JPG
 from pymaging.incubator.formats.png import PNG
 
@@ -30,3 +31,15 @@ INCUBATOR_FORMATS = [
     PNG,
     JPG,
 ]
+
+_LOADED = False
+
+def register():
+    global _LOADED
+    if _LOADED:
+        return
+    for format in INCUBATOR_FORMATS:
+        registry.formats.append(format)
+        for extension in format.extensions:
+            registry.names[extension] = format
+    _LOADED = True

@@ -103,14 +103,9 @@ class Color(object):
         srcr, srcg, srcb = cover_color.red, cover_color.green, cover_color.blue
         dstr, dstg, dstb = self.red, self.green, self.blue
         
-        print(srcr, srcg, srcb, srca)
-        print(dstr, dstg, dstb, dsta)
-
         outr = (srcr * srca + dstr * dsta * (1 - srca)) / outa
         outg = (srcg * srca + dstg * dsta * (1 - srca)) / outa
         outb = (srcb * srca + dstb * dsta * (1 - srca)) / outa
-
-        print(outr, outg, outb, outa)
         
         red = int(round(outr))
         green = int(round(outg))

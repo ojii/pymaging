@@ -22,10 +22,11 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from pymaging.colors import Color
 from pymaging import Image
-import pymaging
+from pymaging.colors import Color
+from pymaging.incubator.formats import register
 import os
+import pymaging
 import unittest
 
 TESTDATA = os.path.join(os.path.dirname(pymaging.__file__), '..', 'testdata')
@@ -37,6 +38,9 @@ BLACK = Color(0, 0, 0, 255)
 WHITE = Color(255, 255, 255, 255)
 
 class PNGTests(unittest.TestCase):
+    def setUp(self):
+        register()
+        
     def test_indexed(self):
         img = Image.open_from_path(_get_filepath('black-white-indexed.png'))
         self.assertEqual(img.get_color(0, 0), BLACK)

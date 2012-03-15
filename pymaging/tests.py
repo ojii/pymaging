@@ -92,7 +92,7 @@ class BasicTests(PymagingBaseTestCase):
         base = RED
         color = GREEN.get_for_brightness(0.5)
         result = base.cover_with(color)
-        self.assertEqual(result, Color(127, 127, 0, 255))
+        self.assertEqual(result, Color(128, 127, 0, 255))
         
     def test_color_mix_with_fastpath(self):
         base = RED
@@ -133,7 +133,7 @@ class DrawTests(PymagingBaseTestCase):
         semi_transparent_green = GREEN.get_for_brightness(0.5)
         img.draw(Pixel(0, 0), semi_transparent_green)
         result = img.get_color(0, 0)
-        self.assertEqual(result, Color(127, 127, 0, 255))
+        self.assertEqual(result, Color(128, 127, 0, 255))
         
     def test_draw_line_topleft_bottomright(self):
         img = image_factory([
