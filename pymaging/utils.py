@@ -26,3 +26,11 @@
 
 def fdiv(a, b):
     return float(a) / float(b)
+
+def bitstruct(structure, value):
+    result = []
+    index = 8
+    for part in structure:
+        result.append((value & ((2 ** index - 1) - (2 ** (index - part) - 1))) >> (index - part))
+        index -= part
+    return tuple(result)
