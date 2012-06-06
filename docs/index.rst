@@ -4,9 +4,9 @@
    contain the root `toctree` directive.
 
 
-########################################
-Welcome to the Pymaging's documentation!
-########################################
+####################################
+Welcome to Pymaging's documentation!
+####################################
 
 
 *****
