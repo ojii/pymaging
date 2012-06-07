@@ -30,18 +30,21 @@ import array
 
 def nearest(source, width, height, pixelsize):
     pixels = []
-    pixelappend = pixels.append # cache for cpython
-    x_ratio = fdiv(source.width, width) # get the x-axis ratio
-    y_ratio = fdiv(source.height, height) # get the y-axis ratio
-    y_range = range(height) # an iterator over the indices of all lines (y-axis)
-    x_range = range(width) # an iterator over the indices of all rows (x-axis)
+    pixelappend = pixels.append  # cache for cpython
+    x_ratio = fdiv(source.width, width)  # get the x-axis ratio
+    y_ratio = fdiv(source.height, height)  # get the y-axis ratio
+
+    y_range = range(height)  # an iterator over the indices of all lines (y-axis)
+    x_range = range(width)  # an iterator over the indices of all rows (x-axis)
     for y in y_range:
-        source_y = int(round(y * y_ratio)) # get the source line
-        line = array.array('B') # initialize a new line
-        lineextend = line.extend # cache for cypthon
-        for x_coord in x_range:
-            source_x_coord = int(round(x_coord * x_ratio)) # get the source row
-            source_x_start = source_x_coord * pixelsize
+        y += 0.5  # use the center of each pixel
+        source_y = int(y * y_ratio)  # get the source line
+        line = array.array('B')  # initialize a new line
+        lineextend = line.extend  # cache for cypthon
+        for x in x_range:
+            x += 0.5  # use the center of each pixel
+            source_x = int(x * x_ratio)  # get the source row
+            source_x_start = source_x * pixelsize
             source_x_end = source_x_start + pixelsize
             lineextend(source.pixels[source_y][source_x_start:source_x_end])
         pixelappend(line)
