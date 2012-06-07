@@ -68,6 +68,51 @@ class ResizeBilinearResamplingTests(PymagingBaseTestCase):
             [Color(64, 0, 191, 255), Color(16, 0, 239, 255)],
         ])
 
+    def test_resize_bilinear_down_simple_transparent(self):
+        transparent = Color(255, 255, 255, 0)
+        img = image_factory([
+            [Red, Blue],
+            [Blue, transparent],
+        ])
+        img = img.resize(1, 1, resample_algorithm=bilinear)
+
+        #  - the alpha values get blended equally.
+        #  - all non-alpha channels get multiplied by their alpha, so the
+        #    transparent pixel does not contribute to the result.
+        self.assertImage(img, [
+            [Color(85, 0, 170, 191)]
+        ])
+
+    def test_resize_bilinear_down_simple_completely_transparent(self):
+        transparent = Color(255, 255, 255, 0)
+        img = image_factory([
+            [transparent, transparent],
+            [transparent, transparent],
+        ])
+        img = img.resize(1, 1, resample_algorithm=bilinear)
+
+        # testing this because a naive implementation can cause div/0 error
+        self.assertImage(img, [
+            [Color(0, 0, 0, 0)]
+        ])
+
+    def test_resize_bilinear_down_proportional_transparent(self):
+        transparent = Color(255, 255, 255, 0)
+        img = image_factory([
+            [Red, Red, transparent],
+            [Red, Red, transparent],
+            [transparent, transparent, transparent],
+        ])
+        img = img.resize(2, 2, resample_algorithm=bilinear)
+
+        #  - the alpha values get blended equally.
+        #  - all non-alpha channels get multiplied by their alpha, so the
+        #    transparent pixel does not contribute to the result.
+        self.assertImage(img, [
+            [Red, Color(255, 0, 0, 64)],
+            [Color(255, 0, 0, 64), Color(255, 0, 0, 16)],
+        ])
+
     def test_resize_bilinear_no_change(self):
         img = image_factory([
             [Red, Blue],

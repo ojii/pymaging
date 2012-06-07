@@ -37,16 +37,16 @@ class Color(object):
         self.green = green
         self.blue = blue
         self.alpha = alpha
-        
+
     def __str__(self):
         return 'Color: r:%s, g:%s, b:%s, a:%s' % (self.red, self.green, self.blue, self.alpha)
-    
+
     def __repr__(self):
         return '<%s>' % self
-    
+
     def __hash__(self):
         return hash(self.to_hexcode())
-    
+
     def __eq__(self, other):
         return (
             self.red == other.red and
@@ -65,7 +65,7 @@ class Color(object):
         if len(pixel) == 3:
             pixel.append(255)
         return cls(*map(int,pixel))
-    
+
     @classmethod
     def from_hexcode(cls, hexcode):
         """
@@ -78,17 +78,17 @@ class Color(object):
         if len(hexcode) == 6:
             hexcode += 'ff'
         return cls(*[int(''.join(x), 16) for x in zip(hexcode[::2], hexcode[1::2])])
-    
+
     def get_for_brightness(self, brightness):
         """
         Brightness is a float between 0 and 1
         """
         return Color(self.red, self.green, self.blue, int(round((self.alpha + 1) * brightness)) - 1)
-    
+
     def cover_with(self, cover_color):
         """
         Mix the two colors respecting their alpha value.
-        
+
         Puts cover_color over itself compositing the colors using the alpha
         values.
         """
@@ -102,19 +102,19 @@ class Color(object):
 
         srcr, srcg, srcb = cover_color.red, cover_color.green, cover_color.blue
         dstr, dstg, dstb = self.red, self.green, self.blue
-        
+
         outr = (srcr * srca + dstr * dsta * (1 - srca)) / outa
         outg = (srcg * srca + dstg * dsta * (1 - srca)) / outa
         outb = (srcb * srca + dstb * dsta * (1 - srca)) / outa
-        
+
         red = int(round(outr))
         green = int(round(outg))
         blue = int(round(outb))
         alpha = int(round(outa * 255))
 
         return Color(red, green, blue, alpha)
-        
-    
+
+
     def to_pixel(self, pixelsize):
         """
         Convert to pixel (list of 3-4 values)
@@ -124,15 +124,15 @@ class Color(object):
             return _mixin_alpha([self.red, self.green, self.blue], self.alpha)
         else:
             return [self.red, self.green, self.blue, self.alpha]
-    
+
     def to_hexcode(self):
         """
         Convert to RGBA hexcode
         """
         return ''.join(hex(x)[2:] for x in (self.red, self.green, self.blue, self.alpha))
-        
 
-ColorType = namedtuple('ColorType', 'length')
 
-RGB = ColorType(3)
-RGBA = ColorType(4)
+ColorType = namedtuple('ColorType', 'length alpha')
+
+RGB = ColorType(3, False)
+RGBA = ColorType(4, True)

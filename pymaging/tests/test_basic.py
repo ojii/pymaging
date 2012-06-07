@@ -50,7 +50,7 @@ def image_factory(colors, alpha=True):
                 color = color.to_pixel(pixelsize)
             row_array.extend(color)
         pixels.append(row_array)
-    return Image(width, height, pixels, ColorType(pixelsize))
+    return Image(width, height, pixels, ColorType(pixelsize, alpha))
 
 
 class PymagingBaseTestCase(unittest.TestCase):

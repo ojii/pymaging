@@ -58,11 +58,17 @@ def bilinear(source, width, height):
     y_ratio = fdiv(source.height, height)  # get the y-axis ratio
     pixelsize = source.pixelsize
 
+    if source.palette:
+        raise NotImplementedError("Resampling of paletted images is not yet supported")
+
     if x_ratio < 1 and y_ratio < 1:
         if not (width % source.width) and not (height % source.height):
             # optimisation: if doing a perfect upscale,
             # can just use nearest neighbor (it's much faster)
-            return nearest(source, width, height, pixelsize)
+            return nearest(source, width, height)
+
+    has_alpha = source.mode.alpha
+    color_channels_range = range(pixelsize - 1 if has_alpha else pixelsize)
 
     y_range = range(height)  # an iterator over the indices of all lines (y-axis)
     x_range = range(width)  # an iterator over the indices of all rows (x-axis)
@@ -101,9 +107,24 @@ def bilinear(source, width, height):
                 src_pixel = src_pixel.to_pixel(pixelsize)
                 weight_x = (1 - weight_x0) if (i % 2) else weight_x0
                 weight_y = (1 - weight_y0) if (i // 2) else weight_y0
-                weight = weight_x * weight_y
-                for channel_index, channel_value in enumerate(src_pixel):
-                    channel_sums[channel_index] += weight * channel_value
+                alpha_weight = weight_x * weight_y
+                color_weight = alpha_weight
+                alpha = 255
+                if has_alpha:
+                    alpha = src_pixel[-1]
+                    if not alpha:
+                        continue
+                    color_weight *= (alpha / 255.0)
+                for channel_index, channel_value in zip(color_channels_range, src_pixel):
+                    channel_sums[channel_index] += color_weight * channel_value
+
+                if has_alpha:
+                    channel_sums[-1] += alpha_weight * alpha
+            if has_alpha:
+                total_alpha_multiplier = channel_sums[-1] / 255.0
+                if total_alpha_multiplier:  # (avoid div/0)
+                    for channel_index in color_channels_range:
+                        channel_sums[channel_index] /= total_alpha_multiplier
 
             line.extend([int(round(s)) for s in channel_sums])
         pixels.append(line)
