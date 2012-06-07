@@ -28,8 +28,9 @@ from pymaging.utils import fdiv
 import array
 
 
-def nearest(source, width, height, pixelsize):
+def nearest(source, width, height):
     pixels = []
+    pixelsize = source.pixelsize
     pixelappend = pixels.append  # cache for cpython
     x_ratio = fdiv(source.width, width)  # get the x-axis ratio
     y_ratio = fdiv(source.height, height)  # get the y-axis ratio
@@ -51,11 +52,11 @@ def nearest(source, width, height, pixelsize):
     return pixels
 
 
-def bilinear(source, width, height, pixelsize):
+def bilinear(source, width, height):
     pixels = []
-
     x_ratio = fdiv(source.width, width)  # get the x-axis ratio
     y_ratio = fdiv(source.height, height)  # get the y-axis ratio
+    pixelsize = source.pixelsize
 
     if x_ratio < 1 and y_ratio < 1:
         if not (width % source.width) and not (height % source.height):

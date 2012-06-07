@@ -41,11 +41,11 @@ class Image(object):
         self.palette = palette
         self.reverse_palette = None
         self.pixelsize = 1 if self.palette else self.mode.length
-    
+
     #==========================================================================
     # Constructors
     #==========================================================================
-    
+
     @classmethod
     def open(cls, fileobj):
         for format in get_format_objects():
@@ -58,9 +58,9 @@ class Image(object):
     def open_from_path(cls, filepath):
         with open(filepath, 'rb') as fobj:
             return cls.open(fobj)
-        
+
     #==========================================================================
-    # Saving 
+    # Saving
     #==========================================================================
 
     def save(self, fileobj, format):
@@ -74,11 +74,11 @@ class Image(object):
             format = os.path.splitext(filepath)[1][1:]
         with open(filepath, 'wb') as fobj:
             self.save(fobj, format)
-    
+
     #==========================================================================
     # Helpers
     #==========================================================================
-    
+
     def get_reverse_palette(self):
         if self.reverse_palette is None:
             self._fill_reverse_palette()
@@ -92,13 +92,13 @@ class Image(object):
             color_obj = Color.from_pixel(color)
             color_obj.to_hexcode()
             self.reverse_palette[color_obj] = index
-            
+
     #==========================================================================
-    # Geometry Operations 
+    # Geometry Operations
     #==========================================================================
 
     def resize(self, width, height, resample_algorithm=nearest):
-        pixels = resample_algorithm(self, width, height, self.pixelsize)
+        pixels = resample_algorithm(self, width, height)
         return Image(
             width,
             height,
@@ -118,7 +118,7 @@ class Image(object):
         else:
             start = x * self.pixelsize
             return Color.from_pixel(line[start:start+self.pixelsize])
-    
+
     def set_color(self, x, y, color):
         if color.alpha != 255:
             base = self.get_color(x, y)
@@ -136,7 +136,7 @@ class Image(object):
 
     def flip_top_bottom(self):
         """
-        Vertically flips the pixels of source into target 
+        Vertically flips the pixels of source into target
         """
         return Image(
             self.width,
@@ -145,7 +145,7 @@ class Image(object):
             self.mode,
             self.palette,
         )
-                    
+
     def flip_left_right(self):
         """
         Horizontally flips the pixels of source into target
@@ -161,7 +161,7 @@ class Image(object):
             self.mode,
             self.palette,
         )
-    
+
     def crop(self, width, height, padding_top, padding_left):
         linestart = padding_left * self.pixelsize
         lineend = linestart + (width * self.pixelsize)
@@ -172,11 +172,11 @@ class Image(object):
             self.mode,
             self.palette,
         )
-    
+
     #==========================================================================
     # Manipulation
     #==========================================================================
-    
+
     def draw(self, shape, color):
         for x, y, pixelcolor in shape.iter_pixels(color):
             self.set_color(x, y, pixelcolor)
