@@ -3,7 +3,7 @@
 PYTHON_VERSIONS="2.6 2.7 3.1 3.2 3.3"
 NOSEBIN=`which nosetests`
 
-if [ ! -e $NOSEBIN ]; then
+if [ -z $NOSEBIN ]; then
     NOSEBIN="-m unittest discover"
 fi
 
@@ -17,7 +17,7 @@ for version in $PYTHON_VERSIONS; do
     fi
 done
 
-if [ -e `which pypy` ]; then
+if [ `which pypy` ]; then
     pypyversion=`pypy -c "import sys;print(sys.version).splitlines()[1]"`
     echo "**************************************************"
     echo "Running tests for PyPy $pypyversion"
