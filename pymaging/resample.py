@@ -49,3 +49,49 @@ def nearest(source, width, height, pixelsize):
             lineextend(source.pixels[source_y][source_x_start:source_x_end])
         pixelappend(line)
     return pixels
+
+
+def bilinear(source, width, height, pixelsize):
+    pixels = []
+
+    x_ratio = fdiv(source.width, width)  # get the x-axis ratio
+    y_ratio = fdiv(source.height, height)  # get the y-axis ratio
+
+    if x_ratio < 1 and y_ratio < 1:
+        if not (width % source.width) and not (height % source.height):
+            # optimisation: if doing a perfect upscale,
+            # can just use nearest neighbor (it's much faster)
+            return nearest(source, width, height, pixelsize)
+
+    y_range = range(height)  # an iterator over the indices of all lines (y-axis)
+    x_range = range(width)  # an iterator over the indices of all rows (x-axis)
+    for y in y_range:
+        src_y = (y + 0.5) * y_ratio - 0.5  # use the center of each pixel
+        src_y_i = int(src_y)
+
+        weight_y0 = 1 - (src_y - src_y_i)
+
+        line = array.array('B')  # initialize a new line
+        for x in x_range:
+            src_x = (x + 0.5) * x_ratio - 0.5
+            src_x_i = int(src_x)
+
+            weight_x0 = 1 - (src_x - src_x_i)
+
+            channel_sums = [0.0] * pixelsize
+            for i, src_pixel in enumerate([
+                source.get_color(src_y_i, src_x_i),
+                source.get_color(src_y_i, src_x_i + 1),
+                source.get_color(src_y_i + 1, src_x_i),
+                source.get_color(src_y_i + 1, src_x_i + 1),
+            ]):
+                src_pixel = src_pixel.to_pixel(pixelsize)
+                weight_x = (1 - weight_x0) if (i % 2) else weight_x0
+                weight_y = (1 - weight_y0) if (i // 2) else weight_y0
+                weight = weight_x * weight_y
+                for channel_index, channel_value in enumerate(src_pixel):
+                    channel_sums[channel_index] += weight * channel_value
+
+            line.extend([int(round(s)) for s in channel_sums])
+        pixels.append(line)
+    return pixels
