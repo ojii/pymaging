@@ -68,14 +68,38 @@ class ResizeBilinearResamplingTests(PymagingBaseTestCase):
             [Color(64, 0, 191, 255), Color(16, 0, 239, 255)],
         ])
 
-    # def test_resize_bilinear_down_transparent(self):
-    #     img = image_factory([
-    #         [Red, Blue],
-    #         [Blue, Color(255, 255, 255, 0)],
-    #     ])
-    #     img = img.resize(1, 1, resample_algorithm=bilinear)
-    #     self.assertImage(img, [
-    #         # 3 colors blended equally,
-    #         # but the transparent one should be ignored
-    #         [Color(85, 0, 170, 255)]
-    #     ])
+    def test_resize_bilinear_no_change(self):
+        img = image_factory([
+            [Red, Blue],
+            [Blue, Green],
+        ])
+        img = img.resize(2, 2, resample_algorithm=bilinear)
+        self.assertImage(img, [
+            [Red, Blue],
+            [Blue, Green],
+        ])
+
+    def test_resize_bilinear_up_simple(self):
+        img = image_factory([
+            [Red, Blue],
+            [Blue, Green],
+        ])
+        img = img.resize(4, 4, resample_algorithm=bilinear)
+        self.assertImage(img, [
+            [Red, Red, Blue, Blue],
+            [Red, Red, Blue, Blue],
+            [Blue, Blue, Green, Green],
+            [Blue, Blue, Green, Green],
+        ])
+
+    def test_resize_bilinear_up_proportional(self):
+        img = image_factory([
+            [Red, Blue],
+            [Blue, Green],
+        ])
+        img = img.resize(3, 3, resample_algorithm=bilinear)
+        self.assertImage(img, [
+            [(177, 4, 71, 255), (106, 11, 128, 255), (0, 21, 212, 255)],
+            [(106, 11, 128, 255), (64, 32, 128, 255), (0, 64, 128, 255)],
+            [(0, 21, 212, 255), (0, 64, 128, 255), (0, 128, 0, 255)],
+        ])

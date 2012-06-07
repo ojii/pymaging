@@ -41,7 +41,15 @@ def image_factory(colors, alpha=True):
     height = len(colors)
     width = len(colors[0]) if height else 0
     pixelsize = 4 if alpha else 3
-    pixels = [array.array('B', itertools.chain(*[color.to_pixel(pixelsize) for color in row])) for row in colors]
+    pixels = []
+    for row in colors:
+        row_array = array.array('B')
+        for color in row:
+            # for easier test writing, handle both tuples and Colors
+            if isinstance(color, Color):
+                color = color.to_pixel(pixelsize)
+            row_array.extend(color)
+        pixels.append(row_array)
     return Image(width, height, pixels, ColorType(pixelsize))
 
 

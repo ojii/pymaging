@@ -69,22 +69,34 @@ def bilinear(source, width, height, pixelsize):
         src_y = (y + 0.5) * y_ratio - 0.5  # use the center of each pixel
         src_y_i = int(src_y)
 
-        weight_y0 = 1 - (src_y - src_y_i)
+        weight_y0 = 1 - abs(src_y - src_y_i)
 
         line = array.array('B')  # initialize a new line
         for x in x_range:
             src_x = (x + 0.5) * x_ratio - 0.5
             src_x_i = int(src_x)
 
-            weight_x0 = 1 - (src_x - src_x_i)
+            weight_x0 = 1 - abs(src_x - src_x_i)
 
             channel_sums = [0.0] * pixelsize
-            for i, src_pixel in enumerate([
-                source.get_color(src_y_i, src_x_i),
-                source.get_color(src_y_i, src_x_i + 1),
-                source.get_color(src_y_i + 1, src_x_i),
-                source.get_color(src_y_i + 1, src_x_i + 1),
-            ]):
+
+            # populate <=4 nearest src_pixels, taking care not to go off
+            # the edge of the image.
+            src_pixels = [source.get_color(src_y_i, src_x_i), None, None, None]
+            if src_x_i + 1 < source.width:
+                src_pixels[1] = source.get_color(src_y_i, src_x_i + 1)
+            else:
+                weight_x0 = 1
+            if src_y_i + 1 < source.height:
+                src_pixels[2] = source.get_color(src_y_i + 1, src_x_i)
+                if src_x_i + 1 < source.height:
+                    src_pixels[3] = source.get_color(src_y_i + 1, src_x_i + 1)
+            else:
+                weight_y0 = 1
+
+            for i, src_pixel in enumerate(src_pixels):
+                if src_pixel is None:
+                    continue
                 src_pixel = src_pixel.to_pixel(pixelsize)
                 weight_x = (1 - weight_x0) if (i % 2) else weight_x0
                 weight_y = (1 - weight_y0) if (i // 2) else weight_y0
