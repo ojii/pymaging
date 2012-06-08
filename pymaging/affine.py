@@ -139,11 +139,16 @@ class AffineTransform(object):
         if clockwise:
             degrees = 360 - degrees
         theta = degrees * pi / 180.0
-        return self * AffineTransform((
-            cos(theta), -sin(theta), 0,
-            sin(theta), cos(theta), 0,
+
+        # HACK: limited precision of floats means rotate() operations
+        # often cause numbers like 1.2246467991473532e-16.
+        # So we round() those to 15 decimal digits. Better solution welcome :/
+        rotation = AffineTransform((
+            round(cos(theta), 15), round(-sin(theta), 15), 0,
+            round(sin(theta), 15), round(cos(theta), 15), 0,
             0, 0, 1,
         ))
+        return self * rotation
 
     def scale(self, x_factor, y_factor=None):
         if y_factor is None:
@@ -156,9 +161,9 @@ class AffineTransform(object):
 
     def translate(self, dx, dy):
         return self * AffineTransform((
-            1, 0, dx,
-            0, 1, dy,
-            0, 0, 1,
+            1, 0, 0,
+            0, 1, 0,
+            dx, dy, 1,
         ))
 
     def process_coord(self, src_x, src_y):

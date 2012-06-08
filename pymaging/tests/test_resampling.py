@@ -1,10 +1,11 @@
 from pymaging.tests.test_basic import PymagingBaseTestCase, image_factory
+from pymaging.affine import AffineTransform
 from pymaging.colors import Color
 from pymaging.webcolors import Red, Green, Blue
 from pymaging.resample import bilinear
 
 
-class ResizeNearestResamplingTests(PymagingBaseTestCase):
+class NearestResamplingTests(PymagingBaseTestCase):
     def test_resize_nearest_down(self):
         img = image_factory([
             [Red, Green, Blue],
@@ -41,6 +42,17 @@ class ResizeNearestResamplingTests(PymagingBaseTestCase):
             [Red, Red, Blue, Blue],
             [Blue, Blue, Green, Green],
             [Blue, Blue, Green, Green],
+        ])
+
+    def test_affine_rotate_nearest_90(self):
+        img = image_factory([
+            [Red, Blue],
+            [Blue, Green],
+        ])
+        img = img.rotate(90)
+        self.assertImage(img, [
+            [Blue, Green],
+            [Red, Blue],
         ])
 
 

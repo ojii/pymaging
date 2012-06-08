@@ -75,6 +75,10 @@ class TestAffineTransform(unittest.TestCase):
         self.assertRaises(TypeError, lambda: a * (1, 2, 3))
 
     # simple transformations
+    def test_translate(self):
+        a = AffineTransform()
+        self.assertEqual(a.translate(3, 4).matrix, (1, 0, 0, 0, 1, 0, 3, 4, 1))
+
     def test_rotate(self):
         a = AffineTransform()
         self.assertEqual(a.rotate(0), a)
@@ -82,5 +86,4 @@ class TestAffineTransform(unittest.TestCase):
 
         self.assertEqual(a.rotate(90), a.rotate(270, clockwise=True))
 
-        # ideally this, but precision limits cause inequalities:
-        #self.assertEqual(a.rotate(90), AffineTransform((0, -1, 0, 1, 0, 0, 0, 0, 1)))
+        self.assertEqual(a.rotate(90), AffineTransform((0, -1, 0, 1, 0, 0, 0, 0, 1)))

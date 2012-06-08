@@ -27,8 +27,10 @@
 __all__ = ('nearest', 'bilinear')
 
 from pymaging.affine import AffineTransform
+from pymaging.colors import Color
 from pymaging.utils import fdiv
 import array
+import math
 
 
 class Resampler(object):
@@ -49,15 +51,57 @@ class Resampler(object):
         )
         return self.affine(source, transform)
 
-    def rotate(self, source, degrees, clockwise=False):
-        transform = AffineTransform().rotate(source, degrees, clockwise=clockwise)
-        return self.affine(source, transform)
-
 
 class Nearest(Resampler):
     def affine(self, source, transform):
-        # TODO
-        raise NotImplementedError
+        # TODO optimize this. It should be faster & possible to do a matrix mult
+        # for each corner, and interpolate pixel locations from there.
+
+        # get image dimensions
+        xs = []
+        ys = []
+        for src_corner in (
+            (0, 0),
+            (0, source.height),
+            (source.width, 0),
+            (source.width, source.height),
+        ):
+            dest_corner = src_corner * transform
+            xs.append(dest_corner[0])
+            ys.append(dest_corner[1])
+
+        width = int(math.ceil(max(xs)) - math.floor(min(xs)))
+        height = int(math.ceil(max(ys)) - math.floor(min(ys)))
+
+        pixels = []
+        pixelsize = source.pixelsize
+
+        # transparent background
+        background = (0, 0, 0, 0)
+
+        # we want to go from dest coords to src coords:
+        transform = transform.inverse()
+
+        x_range = range(width)
+        y_range = range(height)
+        for y in y_range:
+            y += 0.5  # use the center of each pixel
+            line = array.array('B')  # initialize a new line
+            for x in x_range:
+                x += 0.5
+                source_x, source_y = (x, y) * transform
+                source_x = int(source_x)
+                source_y = int(source_y)
+
+                if source_x < 0 or source_y < 0 or \
+                            source_x >= source.width or source_y >= source.height:
+                    line.extend(background)
+                else:
+                    source_x_start = source_x * pixelsize
+                    source_x_end = source_x_start + pixelsize
+                    line.extend(source.pixels[source_y][source_x_start:source_x_end])
+            pixels.append(line)
+        return pixels
 
     def resize(self, source, width, height):
         pixels = []

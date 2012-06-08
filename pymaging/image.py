@@ -128,7 +128,13 @@ class Image(object):
         given number of degrees.
         Anticlockwise unless clockwise=True is given.
         """
-        pixels = resample_algorithm.rotate(self, degrees, clockwise=clockwise)
+        # translate to the origin first, then rotate, then translate back
+        transform = AffineTransform()
+        transform = transform.translate(self.width * -0.5, self.height * -0.5)
+        transform = transform.rotate(degrees, clockwise=clockwise)
+        transform = transform.translate(self.width * 0.5, self.height * 0.5)
+
+        pixels = resample_algorithm.affine(self, transform)
         return Image(
             len(pixels[0]) if pixels else 0,
             len(pixels),
