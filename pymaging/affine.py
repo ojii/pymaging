@@ -13,6 +13,7 @@ class AffineTransform(object):
         | d e f |
         | g h i |
     """
+
     def __init__(self, matrix=_IDENTITY):
         if len(matrix) == 3:
             # accept 3x3 tuples
@@ -34,15 +35,19 @@ class AffineTransform(object):
     def __mul__(self, other):
         """
         Multiply this affine transformation by something.
-        Accepts a scalar (e.g. ``self * 3``) or another AffineTransform.
+        Accepts:
+            * another AffineTransform:
+                ``A * B``
+            * a scalar:
+                ``A * 3``
         """
         if not isinstance(other, AffineTransform):
-            # accept any scalar arg we can convert to float
+            # scalars: accept any arg we can convert to float
             try:
                 s = float(other)
             except (ValueError, TypeError):
                 # this will throw a TypeError (unsupported operand type)
-                return super(AffineTransform, self).__mult__(other)
+                return NotImplemented
             # scalar multiplications are the same as scale matrix multiplications
             other = AffineTransform((
                 s, 0, 0,
@@ -65,12 +70,27 @@ class AffineTransform(object):
         ))
 
     def __rmul__(self, other):
+        if isinstance(other, (tuple, list)):
+            if len(other) not in (2, 3):
+                raise ValueError("Only 2- and 3-tuples can be multiplied by AffineTransform")
+            sm = self.matrix
+            if len(other) == 3:
+                return (
+                    other[0] * sm[0] + other[1] * sm[3] + other[2] * sm[6],
+                    other[0] * sm[1] + other[1] * sm[4] + other[2] * sm[7],
+                    other[0] * sm[2] + other[1] * sm[5] + other[2] * sm[8],
+                )
+            else:
+                return (
+                    other[0] * sm[0] + other[1] * sm[3] + sm[6],
+                    other[0] * sm[1] + other[1] * sm[4] + sm[7],
+                )
+
         if not isinstance(other, AffineTransform):
             # support commutative multiplying for scalars
             # (i.e. 3 * A == A * 3)
             return self.__mul__(other)
-        # propagate up to object, which will call other.__mul__(self)
-        return super(AffineTransform, self).__rmul__(other)
+        return NotImplemented
 
     def __truediv__(self, other):
         if isinstance(other, AffineTransform):
@@ -125,8 +145,14 @@ class AffineTransform(object):
             0, 0, 1,
         ))
 
-    def scale(self, factor):
-        return self * factor
+    def scale(self, x_factor, y_factor=None):
+        if y_factor is None:
+            y_factor = x_factor
+        return self * AffineTransform((
+            x_factor, 0, 0,
+            0, y_factor, 0,
+            0, 0, 1,
+        ))
 
     def translate(self, dx, dy):
         return self * AffineTransform((
@@ -134,3 +160,6 @@ class AffineTransform(object):
             0, 1, dy,
             0, 0, 1,
         ))
+
+    def process_coord(self, src_x, src_y):
+        return (src_x, src_y) * self

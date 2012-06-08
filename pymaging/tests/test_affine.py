@@ -34,7 +34,7 @@ class TestAffineTransform(unittest.TestCase):
         # inverted A*0 = A/0, which is an error
         self.assertRaises(ValueError, (AffineTransform() * 0).inverse)
 
-    # binary operators with scalars
+    # binary operators
     def test_mult_scalar(self):
         a = AffineTransform() * 2
         self.assertEqual(a.matrix, (2, 0, 0, 0, 2, 0, 0, 0, 2))
@@ -53,16 +53,26 @@ class TestAffineTransform(unittest.TestCase):
         a = AffineTransform() / 2
         self.assertEqual(a.matrix, (0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5))
 
-    # binary operators with other AffineTransforms
-    def test_mult(self):
+    def test_mult_affine(self):
         a = AffineTransform() * 2
         b = AffineTransform() * 3
         self.assertEqual((a * b).matrix, (6, 0, 0, 0, 6, 0, 0, 0, 6))
 
-    def test_div(self):
+    def test_div_affine(self):
         a = AffineTransform() * 8
         b = AffineTransform() * 2
         self.assertEqual((a / b).matrix, (4, 0, 0, 0, 4, 0, 0, 0, 4))
+
+    def test_mult_vector(self):
+        a = AffineTransform() * 2
+        self.assertEqual((1, 2) * a, (2, 4))
+        self.assertEqual((1, 2, 3) * a, (2, 4, 6))
+
+        self.assertRaises(ValueError, lambda: (1,) * a)
+        self.assertRaises(ValueError, lambda: (1, 2, 3, 4) * a)
+        self.assertRaises(ValueError, lambda: (1, 2, 3, 4) * a)
+
+        self.assertRaises(TypeError, lambda: a * (1, 2, 3))
 
     # simple transformations
     def test_rotate(self):

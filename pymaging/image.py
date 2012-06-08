@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from pymaging.colors import Color
+from pymaging.affine import AffineTransform
 from pymaging.exceptions import FormatNotSupported, InvalidColor
 from pymaging.formats import get_format, get_format_objects
 from pymaging.helpers import Fliprow
@@ -98,10 +99,39 @@ class Image(object):
     #==========================================================================
 
     def resize(self, width, height, resample_algorithm=nearest):
-        pixels = resample_algorithm(self, width, height)
+        pixels = resample_algorithm.resize(self, width, height)
         return Image(
             width,
             height,
+            pixels,
+            self.mode,
+            self.palette,
+        )
+
+    def affine(self, transform, resample_algorithm=nearest):
+        """
+        Returns a copy of this image transformed by the given
+        AffineTransform.
+        """
+        pixels = resample_algorithm.affine(self, transform)
+        return Image(
+            len(pixels[0]) if pixels else 0,
+            len(pixels),
+            pixels,
+            self.mode,
+            self.palette,
+        )
+
+    def rotate(self, degrees, clockwise=False, resample_algorithm=nearest):
+        """
+        Returns the image obtained by rotating this image by the
+        given number of degrees.
+        Anticlockwise unless clockwise=True is given.
+        """
+        pixels = resample_algorithm.rotate(self, degrees, clockwise=clockwise)
+        return Image(
+            len(pixels[0]) if pixels else 0,
+            len(pixels),
             pixels,
             self.mode,
             self.palette,
@@ -117,7 +147,7 @@ class Image(object):
                 return Color.from_pixel([pixel])
         else:
             start = x * self.pixelsize
-            return Color.from_pixel(line[start:start+self.pixelsize])
+            return Color.from_pixel(line[start:start + self.pixelsize])
 
     def set_color(self, x, y, color):
         if color.alpha != 255:
