@@ -108,12 +108,16 @@ class Image(object):
             self.palette,
         )
 
-    def affine(self, transform, resample_algorithm=nearest):
+    def affine(self, transform, resample_algorithm=nearest, resize_canvas=True):
         """
         Returns a copy of this image transformed by the given
         AffineTransform.
         """
-        pixels = resample_algorithm.affine(self, transform)
+        pixels = resample_algorithm.affine(
+            self,
+            transform,
+            resize_canvas=resize_canvas,
+        )
         return Image(
             len(pixels[0]) if pixels else 0,
             len(pixels),
@@ -122,7 +126,7 @@ class Image(object):
             self.palette,
         )
 
-    def rotate(self, degrees, clockwise=False, resample_algorithm=nearest):
+    def rotate(self, degrees, clockwise=False, resample_algorithm=nearest, resize_canvas=True):
         """
         Returns the image obtained by rotating this image by the
         given number of degrees.
@@ -134,9 +138,9 @@ class Image(object):
         transform = transform.rotate(degrees, clockwise=clockwise)
         transform = transform.translate(self.width * 0.5, self.height * 0.5)
 
-        pixels = resample_algorithm.affine(self, transform)
+        pixels = resample_algorithm.affine(self, transform, resize_canvas=resize_canvas)
         return Image(
-            len(pixels[0]) if pixels else 0,
+            (len(pixels[0]) / self.pixelsize) if pixels else 0,
             len(pixels),
             pixels,
             self.mode,

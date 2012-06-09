@@ -46,13 +46,17 @@ class NearestResamplingTests(PymagingBaseTestCase):
 
     def test_affine_rotate_nearest_90(self):
         img = image_factory([
-            [Red, Blue],
-            [Blue, Green],
+            [Red, Red, Red, Blue],
+            [Red, Red, Blue, Blue],
+            [Red, Red, Red, Red],
+            [Blue, Red, Red, Red],
         ])
         img = img.rotate(90)
         self.assertImage(img, [
-            [Blue, Green],
-            [Red, Blue],
+            [Blue, Blue, Red, Red],
+            [Red, Blue, Red, Red],
+            [Red, Red, Red, Red],
+            [Red, Red, Red, Blue],
         ])
 
 

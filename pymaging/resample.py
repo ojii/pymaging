@@ -41,7 +41,7 @@ class Resampler(object):
             )
         return super(Resampler, self).__init__()
 
-    def affine(self, transform):
+    def affine(self, transform, resize_canvas=True):
         raise NotImplementedError
 
     def resize(self, source, width, height):
@@ -53,7 +53,7 @@ class Resampler(object):
 
 
 class Nearest(Resampler):
-    def affine(self, source, transform):
+    def affine(self, source, transform, resize_canvas=True):
         # TODO optimize this. It should be faster & possible to do a matrix mult
         # for each corner, and interpolate pixel locations from there.
 
@@ -66,18 +66,22 @@ class Nearest(Resampler):
             (source.width, 0),
             (source.width, source.height),
         ):
-            dest_corner = src_corner * transform
+            dest_corner = transform * src_corner
             xs.append(dest_corner[0])
             ys.append(dest_corner[1])
 
-        width = int(math.ceil(max(xs)) - math.floor(min(xs)))
-        height = int(math.ceil(max(ys)) - math.floor(min(ys)))
+        if resize_canvas:
+            width = int(math.ceil(max(xs)) - math.floor(min(xs)))
+            height = int(math.ceil(max(ys)) - math.floor(min(ys)))
+        else:
+            width = source.width
+            height = source.height
 
         pixels = []
         pixelsize = source.pixelsize
 
-        # transparent background
-        background = (0, 0, 0, 0)
+        # transparent or black background
+        background = [0] * pixelsize
 
         # we want to go from dest coords to src coords:
         transform = transform.inverse()
@@ -87,9 +91,10 @@ class Nearest(Resampler):
         for y in y_range:
             y += 0.5  # use the center of each pixel
             line = array.array('B')  # initialize a new line
+
             for x in x_range:
                 x += 0.5
-                source_x, source_y = (x, y) * transform
+                source_x, source_y = transform * (x, y)
                 source_x = int(source_x)
                 source_y = int(source_y)
 
@@ -129,7 +134,7 @@ class Nearest(Resampler):
 
 
 class Bilinear(Resampler):
-    def affine(self, source, transform):
+    def affine(self, source, transform, resize_canvas=True):
         # TODO
         raise NotImplementedError
 

@@ -65,19 +65,21 @@ class TestAffineTransform(unittest.TestCase):
 
     def test_mult_vector(self):
         a = AffineTransform() * 2
-        self.assertEqual((1, 2) * a, (2, 4))
-        self.assertEqual((1, 2, 3) * a, (2, 4, 6))
+        self.assertEqual(a * (1, 2), (2, 4))
+        self.assertEqual(a * (1, 2, 3), (2, 4, 6))
 
-        self.assertRaises(ValueError, lambda: (1,) * a)
-        self.assertRaises(ValueError, lambda: (1, 2, 3, 4) * a)
-        self.assertRaises(ValueError, lambda: (1, 2, 3, 4) * a)
+        self.assertRaises(ValueError, lambda: a * (1,))
+        self.assertRaises(ValueError, lambda: a * (1, 2, 3, 4))
+        self.assertRaises(ValueError, lambda: a * (1, 2, 3, 4))
 
-        self.assertRaises(TypeError, lambda: a * (1, 2, 3))
+        self.assertRaises(TypeError, lambda: (1, 2, 3) * a)
 
     # simple transformations
     def test_translate(self):
         a = AffineTransform()
-        self.assertEqual(a.translate(3, 4).matrix, (1, 0, 0, 0, 1, 0, 3, 4, 1))
+        t = a.translate(3, 4)
+        self.assertEqual(t.matrix, (1, 0, 0, 0, 1, 0, 3, 4, 1))
+        self.assertEqual(t.translate(3, 4).matrix, (1, 0, 0, 0, 1, 0, 6, 8, 1))
 
     def test_rotate(self):
         a = AffineTransform()
@@ -87,3 +89,16 @@ class TestAffineTransform(unittest.TestCase):
         self.assertEqual(a.rotate(90), a.rotate(270, clockwise=True))
 
         self.assertEqual(a.rotate(90), AffineTransform((0, -1, 0, 1, 0, 0, 0, 0, 1)))
+
+    # some chain multiplications
+    def test_chained_translate_rotate(self):
+        a = AffineTransform()
+        # translate by (3, 4). rotate by 90 degrees
+        t = a.translate(3, 4).rotate(90)
+        self.assertEqual(t.matrix, (0, -1, 0, 1, 0, 0, 4, -3, 1))
+
+    def test_chained_translate_rotate_translate(self):
+        a = AffineTransform()
+        # translate by (3, 4). rotate by 90 degrees. then translate back.
+        t = a.translate(3, 4).rotate(90).translate(-3, -4)
+        self.assertEqual(t.matrix, (0, -1, 0, 1, 0, 0, 1, -7, 1))
