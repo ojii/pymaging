@@ -27,7 +27,7 @@ from pymaging.colors import Color
 from pymaging.affine import AffineTransform
 from pymaging.exceptions import FormatNotSupported, InvalidColor
 from pymaging.formats import get_format, get_format_objects
-from pymaging.helpers import Fliprow
+from pymaging.helpers import Fliprow, get_transformed_dimensions
 from pymaging.resample import nearest
 import array
 import os
@@ -136,7 +136,13 @@ class Image(object):
         transform = AffineTransform()
         transform = transform.translate(self.width * -0.5, self.height * -0.5)
         transform = transform.rotate(degrees, clockwise=clockwise)
-        transform = transform.translate(self.width * 0.5, self.height * 0.5)
+
+        width, height = self.width, self.height
+        if resize_canvas:
+            # determine new width
+            width, height = get_transformed_dimensions(transform, (0, 0, width, height))
+
+        transform = transform.translate(width * 0.5, height * 0.5)
 
         pixels = resample_algorithm.affine(self, transform, resize_canvas=resize_canvas)
         return Image(

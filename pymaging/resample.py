@@ -27,10 +27,9 @@
 __all__ = ('nearest', 'bilinear')
 
 from pymaging.affine import AffineTransform
-from pymaging.colors import Color
+from pymaging.helpers import get_transformed_dimensions
 from pymaging.utils import fdiv
 import array
-import math
 
 
 class Resampler(object):
@@ -57,22 +56,12 @@ class Nearest(Resampler):
         # TODO optimize this. It should be faster & possible to do a matrix mult
         # for each corner, and interpolate pixel locations from there.
 
-        # get image dimensions
-        xs = []
-        ys = []
-        for src_corner in (
-            (0, 0),
-            (0, source.height),
-            (source.width, 0),
-            (source.width, source.height),
-        ):
-            dest_corner = transform * src_corner
-            xs.append(dest_corner[0])
-            ys.append(dest_corner[1])
-
         if resize_canvas:
-            width = int(math.ceil(max(xs)) - math.floor(min(xs)))
-            height = int(math.ceil(max(ys)) - math.floor(min(ys)))
+            # get image dimensions
+            width, height = get_transformed_dimensions(
+                transform,
+                (0, 0, source.width, source.height)
+            )
         else:
             width = source.width
             height = source.height
