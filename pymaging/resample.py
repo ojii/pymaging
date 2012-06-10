@@ -43,12 +43,12 @@ class Resampler(object):
     def affine(self, transform, resize_canvas=True):
         raise NotImplementedError
 
-    def resize(self, source, width, height):
+    def resize(self, source, width, height, resize_canvas=True):
         transform = AffineTransform().scale(
             width / float(source.width),
             height / float(source.height)
         )
-        return self.affine(source, transform)
+        return self.affine(source, transform, resize_canvas=resize_canvas)
 
 
 class Nearest(Resampler):
@@ -105,7 +105,13 @@ class Nearest(Resampler):
             pixels.append(line)
         return pixels
 
-    def resize(self, source, width, height):
+    def resize(self, source, width, height, resize_canvas=True):
+        if not resize_canvas:
+            # this optimised implementation doesn't deal with this.
+            # so delegate to affine()
+            return super(Nearest, self).resize(
+                source, width, height, resize_canvas=resize_canvas
+            )
         pixels = []
         pixelsize = source.pixelsize
 
@@ -135,7 +141,13 @@ class Bilinear(Resampler):
         # TODO
         raise NotImplementedError
 
-    def resize(self, source, width, height):
+    def resize(self, source, width, height, resize_canvas=True):
+        if not resize_canvas:
+            # this optimised implementation doesn't deal with this.
+            # so delegate to affine()
+            return super(Bilinear, self).resize(
+                source, width, height, resize_canvas=resize_canvas
+            )
         pixels = []
         x_ratio = fdiv(source.width, width)  # get the x-axis ratio
         y_ratio = fdiv(source.height, height)  # get the y-axis ratio

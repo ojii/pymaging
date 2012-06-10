@@ -5,6 +5,9 @@ from pymaging.webcolors import Red, Green, Blue
 from pymaging.resample import bilinear
 
 
+transparent = Color(0, 0, 0, 0)
+
+
 class NearestResamplingTests(PymagingBaseTestCase):
     def test_resize_nearest_down(self):
         img = image_factory([
@@ -19,7 +22,6 @@ class NearestResamplingTests(PymagingBaseTestCase):
         ])
 
     def test_resize_nearest_down_transparent(self):
-        transparent = Color(255, 255, 255, 0)
         img = image_factory([
             [Red, Green, Blue],
             [Green, Blue, Red],
@@ -44,7 +46,7 @@ class NearestResamplingTests(PymagingBaseTestCase):
             [Blue, Blue, Green, Green],
         ])
 
-    def test_affine_rotate_nearest_90_1(self):
+    def test_affine_rotate_nearest_90(self):
         img = image_factory([
             [Red, Blue],
             [Blue, Blue],
@@ -55,19 +57,19 @@ class NearestResamplingTests(PymagingBaseTestCase):
             [Red, Blue],
         ])
 
-    def test_affine_rotate_nearest_90_2(self):
+    def test_transparent_background(self):
         img = image_factory([
-            [Red, Red, Red, Blue],
             [Red, Red, Blue, Blue],
-            [Red, Red, Red, Red],
-            [Blue, Red, Red, Red],
-        ])
-        img = img.rotate(90)
-        self.assertImage(img, [
+            [Red, Red, Blue, Blue],
             [Blue, Blue, Red, Red],
-            [Red, Blue, Red, Red],
-            [Red, Red, Red, Red],
-            [Red, Red, Red, Blue],
+            [Blue, Blue, Red, Red],
+        ])
+        img = img.resize(2, 2, resize_canvas=False)
+        self.assertImage(img, [
+            [Red, Blue, transparent, transparent],
+            [Blue, Red, transparent, transparent],
+            [transparent, transparent, transparent, transparent],
+            [transparent, transparent, transparent, transparent],
         ])
 
 
@@ -96,7 +98,6 @@ class ResizeBilinearResamplingTests(PymagingBaseTestCase):
         ])
 
     def test_resize_bilinear_down_simple_transparent(self):
-        transparent = Color(255, 255, 255, 0)
         img = image_factory([
             [Red, Blue],
             [Blue, transparent],
@@ -111,7 +112,6 @@ class ResizeBilinearResamplingTests(PymagingBaseTestCase):
         ])
 
     def test_resize_bilinear_down_simple_completely_transparent(self):
-        transparent = Color(255, 255, 255, 0)
         img = image_factory([
             [transparent, transparent],
             [transparent, transparent],
@@ -124,7 +124,6 @@ class ResizeBilinearResamplingTests(PymagingBaseTestCase):
         ])
 
     def test_resize_bilinear_down_proportional_transparent(self):
-        transparent = Color(255, 255, 255, 0)
         img = image_factory([
             [Red, Red, transparent],
             [Red, Red, transparent],

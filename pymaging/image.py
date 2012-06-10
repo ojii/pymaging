@@ -98,8 +98,10 @@ class Image(object):
     # Geometry Operations
     #==========================================================================
 
-    def resize(self, width, height, resample_algorithm=nearest):
-        pixels = resample_algorithm.resize(self, width, height)
+    def resize(self, width, height, resample_algorithm=nearest, resize_canvas=True):
+        pixels = resample_algorithm.resize(
+            self, width, height, resize_canvas=resize_canvas
+        )
         return Image(
             width,
             height,
