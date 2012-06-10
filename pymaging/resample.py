@@ -40,18 +40,6 @@ class Resampler(object):
             )
         return super(Resampler, self).__init__()
 
-    def affine(self, transform, resize_canvas=True):
-        raise NotImplementedError
-
-    def resize(self, source, width, height, resize_canvas=True):
-        transform = AffineTransform().scale(
-            width / float(source.width),
-            height / float(source.height)
-        )
-        return self.affine(source, transform, resize_canvas=resize_canvas)
-
-
-class Nearest(Resampler):
     def affine(self, source, transform, resize_canvas=True):
         if resize_canvas:
             # get image dimensions
@@ -95,15 +83,30 @@ class Nearest(Resampler):
                 source_x = int(row_x0 + dx * x)
                 source_y = int(row_y0 + dy * x)
 
-                if source_x < 0 or source_y < 0 or \
-                            source_x >= source.width or source_y >= source.height:
-                    line.extend(background)
-                else:
-                    source_x_start = source_x * pixelsize
-                    source_x_end = source_x_start + pixelsize
-                    line.extend(source.pixels[source_y][source_x_start:source_x_end])
+                line.extend(
+                    self._get_value(source, source_x, source_y, dx, dy)
+                    or background
+                )
             pixels.append(line)
         return pixels
+
+    def resize(self, source, width, height, resize_canvas=True):
+        transform = AffineTransform().scale(
+            width / float(source.width),
+            height / float(source.height)
+        )
+        return self.affine(source, transform, resize_canvas=resize_canvas)
+
+
+class Nearest(Resampler):
+    def _get_value(self, source, source_x, source_y, dx, dy):
+        if source_x < 0 or source_y < 0 or \
+                    source_x >= source.width or source_y >= source.height:
+            return None
+        else:
+            source_x_start = source_x * source.pixelsize
+            source_x_end = source_x_start + source.pixelsize
+            return source.pixels[source_y][source_x_start:source_x_end]
 
     def resize(self, source, width, height, resize_canvas=True):
         if not resize_canvas:
@@ -137,9 +140,64 @@ class Nearest(Resampler):
 
 
 class Bilinear(Resampler):
-    def affine(self, source, transform, resize_canvas=True):
-        # TODO
-        raise NotImplementedError
+    def _get_value(self, source, source_x, source_y, dx, dy):
+        if source_x < 0 or source_y < 0 or \
+                    source_x >= source.width or source_y >= source.height:
+            return None
+
+        source_y_i = int(source_y)
+        source_x_i = int(source_x)
+
+        weight_y0 = 1 - abs(source_y - source_y_i)
+        weight_x0 = 1 - abs(source_x - source_x_i)
+
+        pixelsize = source.pixelsize
+        channel_sums = [0.0] * pixelsize
+        has_alpha = source.mode.alpha
+        color_channels_range = range(pixelsize - 1 if has_alpha else pixelsize)
+
+        # populate <=4 nearest src_pixels, taking care not to go off
+        # the edge of the image.
+        src_pixels = [source.get_pixel(source_x_i, source_y_i), None, None, None]
+        next_x = int(source_x + dx)
+        next_y = int(source_x + dy)
+
+        if next_x < source.width and next_x >= 0:
+            src_pixels[1] = source.get_pixel(int(next_x), source_y_i)
+        else:
+            weight_x0 = 1
+        if next_y < source.height and next_y >= 0:
+            src_pixels[2] = source.get_pixel(source_x_i, next_y)
+            if next_x < source.width and next_x >= 0:
+                src_pixels[3] = source.get_pixel(next_x, next_y)
+        else:
+            weight_y0 = 1
+
+        for i, src_pixel in enumerate(src_pixels):
+            if src_pixel is None:
+                continue
+            weight_x = (1 - weight_x0) if (i % 2) else weight_x0
+            weight_y = (1 - weight_y0) if (i // 2) else weight_y0
+            alpha_weight = weight_x * weight_y
+            color_weight = alpha_weight
+            alpha = 255
+            if has_alpha:
+                alpha = src_pixel[-1]
+                if not alpha:
+                    continue
+                color_weight *= (alpha / 255.0)
+            for channel_index, channel_value in zip(color_channels_range, src_pixel):
+                channel_sums[channel_index] += color_weight * channel_value
+
+            if has_alpha:
+                channel_sums[-1] += alpha_weight * alpha
+        if has_alpha:
+            total_alpha_multiplier = channel_sums[-1] / 255.0
+            if total_alpha_multiplier:  # (avoid div/0)
+                for channel_index in color_channels_range:
+                    channel_sums[channel_index] /= total_alpha_multiplier
+
+        return [int(round(s)) for s in channel_sums]
 
     def resize(self, source, width, height, resize_canvas=True):
         if not resize_canvas:

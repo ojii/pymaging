@@ -1,5 +1,4 @@
 from pymaging.tests.test_basic import PymagingBaseTestCase, image_factory
-from pymaging.affine import AffineTransform
 from pymaging.colors import Color
 from pymaging.webcolors import Red, Green, Blue
 from pymaging.resample import bilinear
@@ -173,4 +172,15 @@ class ResizeBilinearResamplingTests(PymagingBaseTestCase):
             [(177, 4, 71, 255), (106, 11, 128, 255), (0, 21, 212, 255)],
             [(106, 11, 128, 255), (64, 32, 128, 255), (0, 64, 128, 255)],
             [(0, 21, 212, 255), (0, 64, 128, 255), (0, 128, 0, 255)],
+        ])
+
+    def test_affine_rotate_bilinear_90(self):
+        img = image_factory([
+            [Red, Blue],
+            [Blue, Blue],
+        ])
+        img = img.rotate(90, resample_algorithm=bilinear)
+        self.assertImage(img, [
+            [Blue, Blue],
+            [Red, Blue],
         ])

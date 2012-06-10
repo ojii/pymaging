@@ -155,20 +155,23 @@ class Image(object):
             self.palette,
         )
 
-    def get_color(self, x, y):
+    def get_pixel(self, x, y):
         line = self.pixels[y]
         if self.pixelsize == 1:
             pixel = line[x]
             if self.palette:
-                return Color.from_pixel(self.palette[pixel])
+                return self.palette[pixel]
             else:
-                return Color.from_pixel([pixel])
+                return [pixel]
         else:
             start = x * self.pixelsize
             pixel = line[start:start + self.pixelsize]
             if not pixel:
                 raise IndexError("Pixel (%d, %d) not in image" % (x, y))
-            return Color.from_pixel(pixel)
+            return pixel
+
+    def get_color(self, x, y):
+        return Color.from_pixel(self.get_pixel(x, y))
 
     def set_color(self, x, y, color):
         if color.alpha != 255:
