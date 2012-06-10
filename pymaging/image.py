@@ -165,7 +165,10 @@ class Image(object):
                 return Color.from_pixel([pixel])
         else:
             start = x * self.pixelsize
-            return Color.from_pixel(line[start:start + self.pixelsize])
+            pixel = line[start:start + self.pixelsize]
+            if not pixel:
+                raise IndexError("Pixel (%d, %d) not in image" % (x, y))
+            return Color.from_pixel(pixel)
 
     def set_color(self, x, y, color):
         if color.alpha != 255:
