@@ -53,9 +53,6 @@ class Resampler(object):
 
 class Nearest(Resampler):
     def affine(self, source, transform, resize_canvas=True):
-        # TODO optimize this. It should be faster & possible to do a matrix mult
-        # for each corner, and interpolate pixel locations from there.
-
         if resize_canvas:
             # get image dimensions
             width, height = get_transformed_dimensions(
@@ -75,17 +72,28 @@ class Nearest(Resampler):
         # we want to go from dest coords to src coords:
         transform = transform.inverse()
 
+        # Optimisation:
+        # Because affine transforms have no perspective component,
+        # the *gradient* of each source row/column must be constant.
+        # So, we can calculate the source coordinates for each corner,
+        # and then interpolate for each pixel, instead of doing a
+        # matrix multiplication for each pixel.
+
         x_range = range(width)
         y_range = range(height)
         for y in y_range:
-            y += 0.5  # use the center of each pixel
             line = array.array('B')  # initialize a new line
 
+            # the 0.5's mean we use the center of each pixel
+            row_x0, row_y0 = transform * (0.5, y + 0.5)
+            row_x1, row_y1 = transform * (width + 0.5, y + 0.5)
+
+            dx = float(row_x1 - row_x0) / source.width
+            dy = float(row_y1 - row_y0) / source.width
+
             for x in x_range:
-                x += 0.5
-                source_x, source_y = transform * (x, y)
-                source_x = int(source_x)
-                source_y = int(source_y)
+                source_x = int(row_x0 + dx * x)
+                source_y = int(row_y0 + dy * x)
 
                 if source_x < 0 or source_y < 0 or \
                             source_x >= source.width or source_y >= source.height:
