@@ -121,7 +121,7 @@ class Image(object):
             resize_canvas=resize_canvas,
         )
         return Image(
-            len(pixels[0]) if pixels else 0,
+            len(pixels[0]) / self.pixelsize if pixels else 0,
             len(pixels),
             pixels,
             self.mode,
