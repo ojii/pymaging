@@ -24,40 +24,56 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from collections import namedtuple
+import threading
 
 Format = namedtuple('Format', 'decode encode extensions')
 
 
+
 class FormatRegistry(object):
+    # Use the Borg pattern to share state between all instances. Details at
+    # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66531.
+    __shared_state = dict(
+        names = {},
+        formats = [],
+
+        # -- Everything below here is only used when populating the registry --
+        loaded = False,
+        write_lock = threading.RLock(),
+    )
+
     def __init__(self):
-        self._loaded = False
-        self.names = {}
-        self.formats = []
+        self.__dict__ = self.__shared_state
     
-    def _load(self):
-        if self._loaded:
+    def _populate(self):
+        if self.loaded:
             return
-        import pkg_resources
-        for entry_point in pkg_resources.iter_entry_points('pymaging.formats'):
-            format = entry_point.load()
-            self.formats.append(format)
-            for extension in format.extensions:
-                self.names[extension] = format
-        self._loaded = True
+        with self.write_lock:
+            import pkg_resources
+            for entry_point in pkg_resources.iter_entry_points('pymaging.formats'):
+                format = entry_point.load()
+                self.register(format)
+            self.loaded = True
+    
+    def register(self, format):
+        self.formats.append(format)
+        for extension in format.extensions:
+            self.names[extension] = format
         
     def get_formats(self):
-        self._load()
+        self._populate()
         return self.registry
     
     def get_format_objects(self):
-        self._load()
+        self._populate()
         return self.formats
     
     def get_format(self, format):
-        self._load()
+        self._populate()
         return self.names.get(format, None)
 
 registry = FormatRegistry()
 get_formats = registry.get_formats
 get_format_objects = registry.get_format_objects
 get_format = registry.get_format
+register = registry.register
