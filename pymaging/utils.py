@@ -23,6 +23,12 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import os
 
 def fdiv(a, b):
     return float(a) / float(b)
+
+
+def get_test_file(testfile, fname):
+    return os.path.join(os.path.dirname(testfile), 'testdata', fname)
+get_test_file.__test__ = False # nose...

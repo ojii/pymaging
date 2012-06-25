@@ -29,7 +29,6 @@ from pymaging.image import Image
 from pymaging.shapes import Line, Pixel
 from pymaging.webcolors import Red, Green, Blue, Black, White, Lime
 import array
-import itertools
 import unittest
 try: # 2.x
     from StringIO import StringIO

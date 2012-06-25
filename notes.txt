@@ -1,9 +1,0 @@
-http://www.coranac.com/tonc/text/affine.htm
-
-pypy guys recommended using a flat array instead of list of array for pixels
-
-need to change png reader/writer to just be optimized for whatever pixel format
-we use and not just wrap the existing library.
-
-bilinear filtering in python: http://stackoverflow.com/questions/8661537/how-to-perform-bilinear-interpolation-in-python
-

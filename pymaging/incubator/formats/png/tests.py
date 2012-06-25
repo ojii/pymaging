@@ -24,43 +24,38 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from pymaging import Image
 from pymaging.incubator.formats import register
+from pymaging.utils import get_test_file
 from pymaging.webcolors import Black, White
-import os
-import pymaging
 import unittest
 
-TESTDATA = os.path.join(os.path.dirname(pymaging.__file__), '..', 'testdata')
-
-def _get_filepath(fname):
-    return os.path.join(TESTDATA, fname)
 
 class PNGTests(unittest.TestCase):
     def setUp(self):
         register()
         
     def test_indexed(self):
-        img = Image.open_from_path(_get_filepath('black-white-indexed.png'))
+        img = Image.open_from_path(get_test_file(__file__, 'black-white-indexed.png'))
         self.assertEqual(img.get_color(0, 0), Black)
         self.assertEqual(img.get_color(1, 1), Black)
         self.assertEqual(img.get_color(0, 1), White)
         self.assertEqual(img.get_color(1, 0), White)
         
     def test_non_indexed(self):
-        img = Image.open_from_path(_get_filepath('black-white-non-indexed.png'))
+        img = Image.open_from_path(get_test_file(__file__, 'black-white-non-indexed.png'))
         self.assertEqual(img.get_color(0, 0), Black)
         self.assertEqual(img.get_color(1, 1), Black)
         self.assertEqual(img.get_color(0, 1), White)
         self.assertEqual(img.get_color(1, 0), White)
         
     def test_non_indexed_interlaced(self):
-        img = Image.open_from_path(_get_filepath('black-white-non-indexed-interlaced-adam7.png'))
+        img = Image.open_from_path(get_test_file(__file__, 'black-white-non-indexed-interlaced-adam7.png'))
         self.assertEqual(img.get_color(0, 0), Black)
         self.assertEqual(img.get_color(1, 1), Black)
         self.assertEqual(img.get_color(0, 1), White)
         self.assertEqual(img.get_color(1, 0), White)
         
     def test_with_transparency(self):
-        img = Image.open_from_path(_get_filepath('black-white-with-transparency.png'))
+        img = Image.open_from_path(get_test_file(__file__, 'black-white-with-transparency.png'))
         self.assertEqual(img.get_color(0, 0), Black)
         self.assertEqual(img.get_color(1, 0), White)
         self.assertEqual(img.get_color(1, 1), Black.get_for_brightness(0.5))
