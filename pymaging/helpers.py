@@ -25,6 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import array
+from math import ceil
 from collections import deque
 
 class Fliprow(object):
@@ -39,6 +40,29 @@ class Fliprow(object):
             if not i % pixelsize:
                 while tmp:
                     indicesappend(pop())
-    
+
     def flip(self, row):
         return array.array('B', (row[i] for i in self.indices))
+
+
+def get_transformed_dimensions(transform, box):
+    """
+    Takes an affine transform and a four-tuple of (x0, y0, x1, y1)
+    coordinates.
+    Transforms each corner of the given box, and returns the
+    (width, height) of the transformed box.
+    """
+    (x0, y0, x1, y1) = box
+    xs = []
+    ys = []
+    for corner in (
+        (x0, y0),
+        (x1, y0),
+        (x0, y1),
+        (x1, y1),
+    ):
+        x, y = transform * corner
+        xs.append(x)
+        ys.append(y)
+
+    return int(ceil(max(xs))) - int(min(xs)), int(ceil(max(ys))) - int(min(ys))

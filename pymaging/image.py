@@ -24,9 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from pymaging.colors import Color
+from pymaging.affine import AffineTransform
 from pymaging.exceptions import FormatNotSupported, InvalidColor
 from pymaging.formats import get_format, get_format_objects
-from pymaging.helpers import Fliprow
+from pymaging.helpers import Fliprow, get_transformed_dimensions
 from pymaging.resample import nearest
 import array
 import os
@@ -97,8 +98,10 @@ class Image(object):
     # Geometry Operations
     #==========================================================================
 
-    def resize(self, width, height, resample_algorithm=nearest):
-        pixels = resample_algorithm(self, width, height)
+    def resize(self, width, height, resample_algorithm=nearest, resize_canvas=True):
+        pixels = resample_algorithm.resize(
+            self, width, height, resize_canvas=resize_canvas
+        )
         return Image(
             width,
             height,
@@ -107,17 +110,68 @@ class Image(object):
             self.palette,
         )
 
-    def get_color(self, x, y):
+    def affine(self, transform, resample_algorithm=nearest, resize_canvas=True):
+        """
+        Returns a copy of this image transformed by the given
+        AffineTransform.
+        """
+        pixels = resample_algorithm.affine(
+            self,
+            transform,
+            resize_canvas=resize_canvas,
+        )
+        return Image(
+            len(pixels[0]) / self.pixelsize if pixels else 0,
+            len(pixels),
+            pixels,
+            self.mode,
+            self.palette,
+        )
+
+    def rotate(self, degrees, clockwise=False, resample_algorithm=nearest, resize_canvas=True):
+        """
+        Returns the image obtained by rotating this image by the
+        given number of degrees.
+        Anticlockwise unless clockwise=True is given.
+        """
+        # translate to the origin first, then rotate, then translate back
+        transform = AffineTransform()
+        transform = transform.translate(self.width * -0.5, self.height * -0.5)
+        transform = transform.rotate(degrees, clockwise=clockwise)
+
+        width, height = self.width, self.height
+        if resize_canvas:
+            # determine new width
+            width, height = get_transformed_dimensions(transform, (0, 0, width, height))
+
+        transform = transform.translate(width * 0.5, height * 0.5)
+
+        pixels = resample_algorithm.affine(self, transform, resize_canvas=resize_canvas)
+        return Image(
+            (len(pixels[0]) / self.pixelsize) if pixels else 0,
+            len(pixels),
+            pixels,
+            self.mode,
+            self.palette,
+        )
+
+    def get_pixel(self, x, y):
         line = self.pixels[y]
         if self.pixelsize == 1:
             pixel = line[x]
             if self.palette:
-                return Color.from_pixel(self.palette[pixel])
+                return self.palette[pixel]
             else:
-                return Color.from_pixel([pixel])
+                return [pixel]
         else:
             start = x * self.pixelsize
-            return Color.from_pixel(line[start:start+self.pixelsize])
+            pixel = line[start:start + self.pixelsize]
+            if not pixel:
+                raise IndexError("Pixel (%d, %d) not in image" % (x, y))
+            return pixel
+
+    def get_color(self, x, y):
+        return Color.from_pixel(self.get_pixel(x, y))
 
     def set_color(self, x, y, color):
         if color.alpha != 255:
