@@ -15,8 +15,7 @@ Contents
     :maxdepth: 2
 
     /dev/setup
-    /dev/overview
-    /dev/image
+    /dev/api
     /dev/incubator
     /dev/formats
     /dev/contribute

@@ -23,37 +23,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from __future__ import absolute_import
-from pymaging.colors import Color, ColorType
+from pymaging.colors import Color
 from pymaging.exceptions import FormatNotSupported
 from pymaging.image import Image
-from pymaging.pixelarray import get_pixel_array
 from pymaging.shapes import Line, Pixel
+from pymaging.test_utils import PymagingBaseTestCase, image_factory
 from pymaging.webcolors import Red, Green, Blue, Black, White, Lime
-import array
-import unittest
 try: # pragma: no-cover
     # 2.x
     from StringIO import StringIO
 except ImportError: # pragma: no-cover
     # 3.x
     from io import StringIO
-
-
-def image_factory(colors, alpha=True):
-    height = len(colors)
-    width = len(colors[0]) if height else 0
-    pixelsize = 4 if alpha else 3
-    pixel_array = get_pixel_array(array.array('B', [0] * width * height * pixelsize), width, height, pixelsize)
-    for y in range(height):
-        for x in range(width):
-            pixel_array.set(x, y, colors[y][x].to_pixel(pixelsize))
-    return Image(pixel_array, ColorType(pixelsize, alpha))
-
-
-class PymagingBaseTestCase(unittest.TestCase):
-    def assertImage(self, img, colors, alpha=True):
-        check = image_factory(colors, alpha)
-        self.assertEqual(img.pixels, check.pixels)
 
 
 class BasicTests(PymagingBaseTestCase):

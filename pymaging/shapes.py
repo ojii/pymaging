@@ -28,7 +28,12 @@ from pymaging.utils import fdiv
 import math
 
 
-class Pixel(object):
+class BaseShape(object):
+    def iter_pixels(self, color):
+        raise StopIteration()
+
+
+class Pixel(BaseShape):
     def __init__(self, x, y):
         self.x = x
         self.y = y

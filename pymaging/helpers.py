@@ -23,26 +23,7 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import array
 from math import ceil
-from collections import deque
-
-class Fliprow(object):
-    def __init__(self, rowlength, pixelsize):
-        self.indices = deque()
-        indicesappend = self.indices.append
-        tmp = deque()
-        append = tmp.append
-        pop = tmp.pop
-        for i in range(rowlength - 1, -1, -1):
-            append(i)
-            if not i % pixelsize:
-                while tmp:
-                    indicesappend(pop())
-
-    def flip(self, row):
-        return array.array('B', (row[i] for i in self.indices))
 
 
 def get_transformed_dimensions(transform, box):

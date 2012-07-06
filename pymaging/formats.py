@@ -60,10 +60,6 @@ class FormatRegistry(object):
         for extension in format.extensions:
             self.names[extension] = format
         
-    def get_formats(self):
-        self._populate()
-        return self.registry
-    
     def get_format_objects(self):
         self._populate()
         return self.formats
@@ -73,7 +69,6 @@ class FormatRegistry(object):
         return self.names.get(format, None)
 
 registry = FormatRegistry()
-get_formats = registry.get_formats
 get_format_objects = registry.get_format_objects
 get_format = registry.get_format
 register = registry.register

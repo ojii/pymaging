@@ -41,12 +41,6 @@ class GenericPixelArray(object):
         start = self._translate(x, y)
         return [self.data[start+i] for i in range(self.pixelsize)]
 
-    def get_multiple(self, start_x, end_x, start_y, end_y):
-        """
-        Returns a list of pixels (a list of lists of length `self.pixelsize`) in the rectangle start_x/start_y-end_x/end_y
-        """
-        return [[self.get(x, y) for x in range(start_x, end_x)] for y in range(start_y, end_y)]
-
     def set(self, x, y, pixel):
         """
         Sets the pixel (a tuple of length `self.pixelsize`) to the pixel array at x/y

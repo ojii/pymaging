@@ -27,9 +27,8 @@ from pymaging.colors import Color
 from pymaging.affine import AffineTransform
 from pymaging.exceptions import FormatNotSupported, InvalidColor
 from pymaging.formats import get_format, get_format_objects
-from pymaging.helpers import Fliprow, get_transformed_dimensions
+from pymaging.helpers import get_transformed_dimensions
 from pymaging.resample import nearest
-import array
 import os
 
 

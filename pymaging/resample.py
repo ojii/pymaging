@@ -25,7 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from pymaging.pixelarray import get_pixel_array
 
-__all__ = ('nearest', 'bilinear')
+__all__ = ('nearest', 'bilinear', 'Resampler')
 
 from pymaging.affine import AffineTransform
 from pymaging.helpers import get_transformed_dimensions
@@ -39,7 +39,6 @@ class Resampler(object):
             raise NotImplementedError(
                 "%r is abstract, instantiate a subclass instead" % Resampler
             )
-        return super(Resampler, self).__init__()
 
     def affine(self, source, transform, resize_canvas=True):
         if resize_canvas:
