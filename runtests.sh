@@ -1,11 +1,7 @@
 #!/bin/bash
 
 PYTHON_VERSIONS="2.6 2.7 3.1 3.2 3.3"
-NOSEBIN=`which nosetests`
-
-if [ -z $NOSEBIN ]; then
-    NOSEBIN="-m unittest discover"
-fi
+COMMAND="setup.py test"
 
 for version in $PYTHON_VERSIONS; do
     pybin="python$version"
@@ -13,7 +9,11 @@ for version in $PYTHON_VERSIONS; do
         echo "****************************"
         echo "Running tests for Python $version"
         echo "****************************"
-        $pybin $NOSEBIN
+        $pybin $COMMAND 
+    else
+        echo "****************************"
+        echo "Python $version not found, skipping"
+        echo "****************************"
     fi
 done
 
@@ -22,5 +22,5 @@ if [ `which pypy` ]; then
     echo "**************************************************"
     echo "Running tests for PyPy $pypyversion"
     echo "**************************************************"
-    pypy $NOSEBIN
+    pypy $COMMAND
 fi

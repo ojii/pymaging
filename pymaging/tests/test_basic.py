@@ -31,9 +31,11 @@ from pymaging.shapes import Line, Pixel
 from pymaging.webcolors import Red, Green, Blue, Black, White, Lime
 import array
 import unittest
-try: # 2.x
+try: # pragma: no-cover
+    # 2.x
     from StringIO import StringIO
-except: # 3.x
+except ImportError: # pragma: no-cover
+    # 3.x
     from io import StringIO
 
 
