@@ -23,6 +23,7 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from pymaging.pixelarray import get_pixel_array
 
 __all__ = ('nearest', 'bilinear')
 
@@ -51,7 +52,6 @@ class Resampler(object):
             width = source.width
             height = source.height
 
-        pixels = []
         pixelsize = source.pixelsize
 
         # transparent or black background
@@ -69,6 +69,8 @@ class Resampler(object):
 
         x_range = range(width)
         y_range = range(height)
+        new_array = source.pixels.copy()
+
         for y in y_range:
             line = array.array('B')  # initialize a new line
 
@@ -83,12 +85,11 @@ class Resampler(object):
                 source_x = int(row_x0 + dx * x)
                 source_y = int(row_y0 + dy * x)
 
-                line.extend(
+                new_array.set(x, y,
                     self._get_value(source, source_x, source_y, dx, dy)
                     or background
                 )
-            pixels.append(line)
-        return pixels
+        return new_array
 
     def resize(self, source, width, height, resize_canvas=True):
         transform = AffineTransform().scale(
@@ -104,9 +105,7 @@ class Nearest(Resampler):
                     source_x >= source.width or source_y >= source.height:
             return None
         else:
-            source_x_start = source_x * source.pixelsize
-            source_x_end = source_x_start + source.pixelsize
-            return source.pixels[source_y][source_x_start:source_x_end]
+            return source.pixels.get(source_y, source_x)
 
     def resize(self, source, width, height, resize_canvas=True):
         if not resize_canvas:
@@ -115,10 +114,9 @@ class Nearest(Resampler):
             return super(Nearest, self).resize(
                 source, width, height, resize_canvas=resize_canvas
             )
-        pixels = []
+        pixels = array.array('B')
         pixelsize = source.pixelsize
 
-        pixelappend = pixels.append  # cache for cpython
         x_ratio = fdiv(source.width, width)  # get the x-axis ratio
         y_ratio = fdiv(source.height, height)  # get the y-axis ratio
 
@@ -127,16 +125,11 @@ class Nearest(Resampler):
         for y in y_range:
             y += 0.5  # use the center of each pixel
             source_y = int(y * y_ratio)  # get the source line
-            line = array.array('B')  # initialize a new line
-            lineextend = line.extend  # cache for cypthon
             for x in x_range:
                 x += 0.5  # use the center of each pixel
                 source_x = int(x * x_ratio)  # get the source row
-                source_x_start = source_x * pixelsize
-                source_x_end = source_x_start + pixelsize
-                lineextend(source.pixels[source_y][source_x_start:source_x_end])
-            pixelappend(line)
-        return pixels
+                pixels.extend(source.pixels.get(source_x, source_y))
+        return get_pixel_array(pixels, width, height, pixelsize)
 
 
 class Bilinear(Resampler):
@@ -206,10 +199,10 @@ class Bilinear(Resampler):
             return super(Bilinear, self).resize(
                 source, width, height, resize_canvas=resize_canvas
             )
-        pixels = []
         x_ratio = fdiv(source.width, width)  # get the x-axis ratio
         y_ratio = fdiv(source.height, height)  # get the y-axis ratio
         pixelsize = source.pixelsize
+        pixels = array.array('B')
 
         if source.palette:
             raise NotImplementedError("Resampling of paletted images is not yet supported")
@@ -231,7 +224,6 @@ class Bilinear(Resampler):
 
             weight_y0 = 1 - abs(src_y - src_y_i)
 
-            line = array.array('B')  # initialize a new line
             for x in x_range:
                 src_x = (x + 0.5) * x_ratio - 0.5
                 src_x_i = int(src_x)
@@ -278,10 +270,8 @@ class Bilinear(Resampler):
                     if total_alpha_multiplier:  # (avoid div/0)
                         for channel_index in color_channels_range:
                             channel_sums[channel_index] /= total_alpha_multiplier
-
-                line.extend([int(round(s)) for s in channel_sums])
-            pixels.append(line)
-        return pixels
+                pixels.extend([int(round(s)) for s in channel_sums])
+        return get_pixel_array(pixels, width, height, pixelsize)
 
 
 nearest = Nearest()

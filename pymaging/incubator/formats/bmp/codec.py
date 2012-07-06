@@ -27,6 +27,7 @@ from pymaging.colors import RGB
 from pymaging.image import Image
 import array
 import struct
+from pymaging.pixelarray import get_pixel_array
 
 
 def BITMAPINFOHEADER(decoder):
@@ -36,9 +37,12 @@ def BITMAPINFOHEADER(decoder):
     assert nplanes == 1, nplanes
     if decoder.bits_per_pixel == 32:
         decoder.read_row = decoder.read_row_32bit
+        decoder.pixelsize = 3
     elif decoder.bits_per_pixel == 24:
         decoder.read_row = decoder.read_row_24bit
+        decoder.pixelsize = 3
     elif decoder.bits_per_pixel == 1:
+        decoder.pixelsize = 1
         decoder.read_row = decoder.read_row_1bit
 
 def BITMAPV2INFOHEADER(decoder):
@@ -75,7 +79,20 @@ class BMPDecoder(object):
         pre_header = self.fileobj.tell()
         headersize = struct.unpack('<i', self.fileobj.read(4))[0]
         palette_start = pre_header + headersize
+        # this will set the following attributes:
+        #   width
+        #   height
+        #   bits_per_pixel
+        #   compression_method
+        #   bmp_bytesz
+        #   hres
+        #   vres
+        #   ncolors
+        #   nimpcolors
+        #   read_row
+        #   pixelsize
         HEADERS[headersize](self)
+        self.pixelwidth = self.width * self.pixelsize
         self.row_size = ((self.bits_per_pixel * self.width) // 32) * 4
         # there might be header stuff that wasn't read, so skip ahead to the 
         # start of the color palette
@@ -87,42 +104,48 @@ class BMPDecoder(object):
         # set palette to None instead of empty list when there's no palette
         self.palette = palette or None
     
-    def read_row_32bit(self):
-        row = array.array('B')
-        for _ in range(self.width):
+    def read_row_32bit(self, pixel_array, row_num):
+        row_start = row_num * self.pixelwidth
+        for x in range(self.width):
             # not sure what the first thing is used for 
             _, b, g, r =  struct.unpack('<BBBB', self.fileobj.read(4))
-            row.extend([r, g, b]) # bgr->rgb
-        return row
-    
-    def read_row_24bit(self):
+            start = row_start + (x * self.pixelsize)
+            pixel_array.data[start] = r
+            pixel_array.data[start + 1] = g
+            pixel_array.data[start + 2] = b
+
+    def read_row_24bit(self, pixel_array, row_num):
         row = array.array('B')
-        rowlength = self.width * 3
-        row.fromfile(self.fileobj, rowlength)
-        self.fileobj.read(rowlength % 4) # padding
-        return row
-    
-    def read_row_1bit(self):
-        row = array.array('B')
+        row.fromfile(self.fileobj, self.pixelwidth)
+        start = row_num * self.pixelwidth
+        end = start + self.pixelwidth
+        pixel_array.data[start:end] = row
+        self.fileobj.read(self.pixelwidth % 4) # padding
+
+    def read_row_1bit(self, pixel_array, row_num):
         padding = 32 - (self.width % 32)
-        rowlength = (self.width + padding) // 8
-        bits = []
-        for b in struct.unpack('%sB' % rowlength, self.fileobj.read(rowlength)):
+        row_length = (self.width + padding) // 8
+        start = row_num * self.pixelwidth
+        item = 0
+        for b in struct.unpack('%sB' % row_length, self.fileobj.read(row_length)):
             for _ in range(8):
                 a, b = divmod(b, 128)
-                bits.append(a)
+                pixel_array.data[start + item] = a
+                item += 1
+                if item >= self.width:
+                    return
                 b <<= 1
-        row.fromlist(bits[:self.width])
-        return row
-    
+
     def get_image(self):
         # go to the start of the pixel array
         self.fileobj.seek(self.offset)
         # since bmps are stored upside down, initialize a pixel list
-        pixels = [None for _ in range(self.height)]
+        initial = array.array('B', [0] * self.width * self.height * self.pixelsize)
+        pixel_array = get_pixel_array(initial, self.width, self.height, self.pixelsize)
         # iterate BACKWARDS over the line indices so we don't have to reverse
         # later. this is why we intialize pixels above.
-        for index in range(self.height - 1, -1, -1):
-            pixels[index] = self.read_row()
+        for row_num in range(self.height - 1, -1, -1):
+            self.read_row(pixel_array, row_num)
         # TODO: Not necessarily RGB
-        return Image(self.width, self.height, pixels, RGB, palette=self.palette)
+
+        return Image(pixel_array, RGB, palette=self.palette)

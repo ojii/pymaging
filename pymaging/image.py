@@ -34,14 +34,14 @@ import os
 
 
 class Image(object):
-    def __init__(self, width, height, pixels, mode, palette=None):
-        self.width = width
-        self.height = height
-        self.pixels = pixels
+    def __init__(self, pixelarray, mode, palette=None):
         self.mode = mode
         self.palette = palette
         self.reverse_palette = None
-        self.pixelsize = 1 if self.palette else self.mode.length
+        self.pixels = pixelarray
+        self.width = self.pixels.width
+        self.height = self.pixels.height
+        self.pixelsize = self.pixels.pixelsize
 
     #==========================================================================
     # Constructors
@@ -103,8 +103,6 @@ class Image(object):
             self, width, height, resize_canvas=resize_canvas
         )
         return Image(
-            width,
-            height,
             pixels,
             self.mode,
             self.palette,
@@ -121,8 +119,6 @@ class Image(object):
             resize_canvas=resize_canvas,
         )
         return Image(
-            len(pixels[0]) / self.pixelsize if pixels else 0,
-            len(pixels),
             pixels,
             self.mode,
             self.palette,
@@ -148,27 +144,20 @@ class Image(object):
 
         pixels = resample_algorithm.affine(self, transform, resize_canvas=resize_canvas)
         return Image(
-            (len(pixels[0]) / self.pixelsize) if pixels else 0,
-            len(pixels),
             pixels,
             self.mode,
             self.palette,
         )
 
     def get_pixel(self, x, y):
-        line = self.pixels[y]
-        if self.pixelsize == 1:
-            pixel = line[x]
-            if self.palette:
-                return self.palette[pixel]
-            else:
-                return [pixel]
+        try:
+            raw_pixel = self.pixels.get(x, y)
+        except IndexError:
+            raise IndexError("Pixel (%d, %d) not in image" % (x, y))
+        if self.pixelsize == 1 and self.palette:
+            return self.palette[raw_pixel[0]]
         else:
-            start = x * self.pixelsize
-            pixel = line[start:start + self.pixelsize]
-            if not pixel:
-                raise IndexError("Pixel (%d, %d) not in image" % (x, y))
-            return pixel
+            return raw_pixel
 
     def get_color(self, x, y):
         return Color.from_pixel(self.get_pixel(x, y))
@@ -181,21 +170,16 @@ class Image(object):
             if color not in self.reverse_palette:
                 raise InvalidColor(str(color))
             index = self.reverse_palette[color]
-            self.pixels[y][x] = index
+            self.pixels.set(x, y, [index])
         else:
-            start = x * self.pixelsize
-            end = start + self.pixelsize
-            pixel = color.to_pixel(self.pixelsize)
-            self.pixels[y][start:end] = array.array('B', pixel)
+            self.pixels.set(x, y, color.to_pixel(self.pixelsize))
 
     def flip_top_bottom(self):
         """
         Vertically flips the pixels of source into target
         """
         return Image(
-            self.width,
-            self.height,
-            [array.array(line.typecode, line) for line in reversed(self.pixels)],
+            self.pixels.copy_flipped_top_bottom(),
             self.mode,
             self.palette,
         )
@@ -204,25 +188,20 @@ class Image(object):
         """
         Horizontally flips the pixels of source into target
         """
-        if self.pixelsize == 1:
-            flipper = reversed
-        else:
-            flipper = Fliprow(self.width * self.pixelsize, self.pixelsize).flip
         return Image(
-            self.width,
-            self.height,
-            [flipper(line) for line in self.pixels],
+            self.pixels.copy_flipped_left_right(),
             self.mode,
             self.palette,
         )
 
     def crop(self, width, height, padding_top, padding_left):
-        linestart = padding_left * self.pixelsize
-        lineend = linestart + (width * self.pixelsize)
+        new_pixels = self.pixels.copy()
+        new_pixels.remove_lines(0, padding_top)
+        new_pixels.remove_lines(height, new_pixels.height - height)
+        new_pixels.remove_columns(0, padding_left)
+        new_pixels.remove_columns(width, new_pixels.width - width)
         return Image(
-            width,
-            height,
-            [line[linestart:lineend] for line in self.pixels[padding_top:padding_top + height]],
+            new_pixels,
             self.mode,
             self.palette,
         )

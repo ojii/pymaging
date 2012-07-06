@@ -26,6 +26,7 @@ from __future__ import absolute_import
 from pymaging.colors import Color, ColorType
 from pymaging.exceptions import FormatNotSupported
 from pymaging.image import Image
+from pymaging.pixelarray import get_pixel_array
 from pymaging.shapes import Line, Pixel
 from pymaging.webcolors import Red, Green, Blue, Black, White, Lime
 import array
@@ -40,22 +41,16 @@ def image_factory(colors, alpha=True):
     height = len(colors)
     width = len(colors[0]) if height else 0
     pixelsize = 4 if alpha else 3
-    pixels = []
-    for row in colors:
-        row_array = array.array('B')
-        for color in row:
-            # for easier test writing, handle both tuples and Colors
-            if isinstance(color, Color):
-                color = color.to_pixel(pixelsize)
-            row_array.extend(color)
-        pixels.append(row_array)
-    return Image(width, height, pixels, ColorType(pixelsize, alpha))
+    pixel_array = get_pixel_array(array.array('B', [0] * width * height * pixelsize), width, height, pixelsize)
+    for y in range(height):
+        for x in range(width):
+            pixel_array.set(x, y, colors[y][x].to_pixel(pixelsize))
+    return Image(pixel_array, ColorType(pixelsize, alpha))
 
 
 class PymagingBaseTestCase(unittest.TestCase):
     def assertImage(self, img, colors, alpha=True):
         check = image_factory(colors, alpha)
-        self.maxDiff = None
         self.assertEqual(img.pixels, check.pixels)
 
 

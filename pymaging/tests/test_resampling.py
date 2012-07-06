@@ -193,9 +193,9 @@ class ResizeBilinearResamplingTests(PymagingBaseTestCase):
         ])
         img = img.resize(3, 3, resample_algorithm=bilinear)
         self.assertImage(img, [
-            [(177, 4, 71, 255), (106, 11, 128, 255), (0, 21, 212, 255)],
-            [(106, 11, 128, 255), (64, 32, 128, 255), (0, 64, 128, 255)],
-            [(0, 21, 212, 255), (0, 64, 128, 255), (0, 128, 0, 255)],
+            [Color(177, 4, 71, 255), Color(106, 11, 128, 255), Color(0, 21, 212, 255)],
+            [Color(106, 11, 128, 255), Color(64, 32, 128, 255), Color(0, 64, 128, 255)],
+            [Color(0, 21, 212, 255), Color(0, 64, 128, 255), Color(0, 128, 0, 255)],
         ])
 
     def test_affine_rotate_bilinear_90(self):

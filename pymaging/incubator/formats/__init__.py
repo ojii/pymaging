@@ -25,10 +25,8 @@
 
 from pymaging.formats import registry
 from pymaging.incubator.formats.jpg import JPG
-from pymaging.incubator.formats.png import PNG
 
 INCUBATOR_FORMATS = [
-    PNG,
     JPG,
 ]
 

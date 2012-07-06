@@ -29,6 +29,9 @@ from pymaging.formats import Format
 from pymaging.image import Image
 from pymaging.incubator.formats.jpg.raw import TonyJpegDecoder
 import array
+from pymaging.pixelarray import get_pixel_array
+
+PIXELSIZE = 3
 
 def decode(fileobj):
     decoder = TonyJpegDecoder()
@@ -38,14 +41,18 @@ def decode(fileobj):
     except:
         fileobj.seek(0)
         return None
-    # bmpout is in bgr format, bottom to top. it has padding stuff.
-    pixels = []
-    for _ in range(0, decoder.Height):
-        #TODO: flip bgr to rgb
-        pixels.append(array.array('B', bmpout[:3 * decoder.Width]))
-        del bmpout[:3 * decoder.Width]
-        del bmpout[:2] # kill padding
-    return Image(decoder.Width, decoder.Height, list(reversed(pixels)), RGB)
+    pixels = array.array('B')
+    row_width = decoder.Width * PIXELSIZE
+    # rows are bottom to top
+    for reversed_row_num in range(decoder.Height - 1, -1, -1):
+        start = reversed_row_num * (row_width + 2)
+        end = start + row_width
+        pixels.extend(bmpout[start:end])
+        #pixels.extend(bmpout[:3 * decoder.Width])
+        #del bmpout[:3 * decoder.Width]
+        #del bmpout[:2] # kill padding
+    pixel_array = get_pixel_array(pixels, decoder.Width, decoder.Height, PIXELSIZE)
+    return Image(pixel_array, RGB)
 
 def encode(image, fileobj):
     raise FormatNotSupported('jpeg')

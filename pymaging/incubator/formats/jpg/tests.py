@@ -25,21 +25,19 @@
 from pymaging import Image
 from pymaging.colors import Color
 from pymaging.incubator.formats import register
+from pymaging.tests.test_basic import PymagingBaseTestCase
 from pymaging.utils import get_test_file
 from pymaging.webcolors import Black, White
-import unittest
 
 ALMOST_BLACK = Color(8, 8,8 , 255)
 
-class JPGTests(unittest.TestCase):
+class JPGTests(PymagingBaseTestCase):
     def setUp(self):
         register()
 
     def test_decode(self):
         img = Image.open_from_path(get_test_file(__file__, 'black-white-100.jpg'))
-        self.assertEqual(img.get_color(0, 0), Black)
-        # TODO: Is this correct? Is this just JPEG being JPEG or is the decoder
-        #       buggy? 1/1 SHOULD be BLACK but it's 8 8 8.
-        self.assertEqual(img.get_color(1, 1), ALMOST_BLACK)
-        self.assertEqual(img.get_color(0, 1), White)
-        self.assertEqual(img.get_color(1, 0), White)
+        self.assertImage(img, [
+            [Black, White],
+            [White, ALMOST_BLACK] # no clue why this is "almost" black
+        ], False)
