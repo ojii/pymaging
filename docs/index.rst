@@ -17,15 +17,35 @@ Pymaging is a pure Python imaging library that is compatible both with Python 2
 and Python 3.
 
 
-********
-Contents
-********
+******************
+User Documentation
+******************
+
+If you want to learn more about how to use pymaging, this part of the documentation is for you:
+
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
 
-    usr/index
-    dev/index
+    /usr/installation
+    /usr/quickstart
+
+
+***********************
+Developer Documentation
+***********************
+
+If you want to hack (or extend) pymaging, this part is for you:
+
+.. toctree::
+    :maxdepth: 3
+
+    /dev/setup
+    /dev/overview
+    /dev/api
+    /dev/formats
+    /dev/contribute
+
 
 Indices and tables
 ==================

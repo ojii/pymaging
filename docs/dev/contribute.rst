@@ -21,6 +21,7 @@ General
 
 - Code **must** be tested. Untested patches will be declined.
 - If a patch affects the public facing API, it must document these changes.
+- If a patch changes code, the internal documentation (docs/dev/) must be updated to reflect the changes.
 
 Since we're hosted on GitHub, pymaging uses `git`_ as a version control system.
 

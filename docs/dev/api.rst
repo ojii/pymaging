@@ -15,17 +15,17 @@ Internal API
     The image class. This is the core class of pymaging.
 
     :param pixelarray: An instance of :class:`pymaging.pixelarray.GenericPixelArray` or a subclass of it.
-    :param mode: The color mode. A :class:`pymaging.color.ColorType` instance.
-    :param palette: If given, this will be the color palette used by the image. A list of :class:`pymaging.color.Color`
+    :param mode: The color mode. A :class:`pymaging.colors.ColorType` instance.
+    :param palette: If given, this will be the color palette used by the image. A list of :class:`pymaging.colors.Color`
                     instances.
 
     .. attribute:: mode
 
-        The color mode used in this image. A :class:`pymaging.color.ColorType` instance.
+        The color mode used in this image. A :class:`pymaging.colors.ColorType` instance.
 
     .. attribute:: palette
 
-        The palette used in this image. A list of :class:`pymaging.color.Color` instances or ``None``.
+        The palette used in this image. A list of :class:`pymaging.colors.Color` instances or ``None``.
 
     .. attribute:: reverse_palette
 
@@ -82,7 +82,7 @@ Internal API
 
     .. method:: _fill_reverse_palette
 
-        Populates the reverse palette, which is a mapping of :class:`pymaging.color.Color` instances to their index in
+        Populates the reverse palette, which is a mapping of :class:`pymaging.colors.Color` instances to their index in
         the palette. Sets :attr:`reverse_palette`.
 
     .. method:: resize(width, height, resample_algorithm=nearest, resize_canvas=True)
@@ -163,31 +163,31 @@ Internal API
 
     The matrix should be given either as a sequence of 9 values or a sequence of 3 sequences of 3 values.
 
-    .. TODO:: Needs documentation about the actual values of the matrix.
+    .. note:: Needs documentation about the actual values of the matrix.
 
     .. attribute:: matrix
 
-        .. TODO:: Needs documentation.
+        .. note:: Needs documentation.
 
     .. method:: _determinant
 
-        .. TODO:: Needs documentation.
+        .. note:: Needs documentation.
 
     .. method:: inverse
 
-        .. TODO:: Needs documentation.
+        .. note:: Needs documentation.
 
     .. method:: rotate(degrees, clockwise=False)
 
-        .. TODO:: Needs documentation.
+        .. note:: Needs documentation.
 
     .. method:: scale(x_factor, y_factor=None)
 
-        .. TODO:: Needs documentation.
+        .. note:: Needs documentation.
 
     .. method:: translate(dx, dy)
 
-        .. TODO:: Needs documentation.
+        .. note:: Needs documentation.
 
 
 .. module:: pymaging.colors
@@ -485,11 +485,11 @@ Loads and maintains the formats supported in this installation.
 
     .. method:: affine(source, transform, resize_canvas=True)
 
-        .. TODO:: Document.
+        .. note:: Document.
 
     .. method:: resize(source, width, height, resize_canvas=True)
 
-        .. TODO:: Document.
+        .. note:: Document.
 
 
 .. class:: Nearest
