@@ -5,7 +5,8 @@
 !.coveragerc
 /dist/
 /build/
-/env/
+/env*/
+*.xml
 /docs/_*
 /htmlcov/
 /pymaging.egg-info/
