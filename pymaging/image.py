@@ -221,9 +221,9 @@ class Image(object):
         for x, y, pixelcolor in shape.iter_pixels(color):
             self.set_color(x, y, pixelcolor)
 
-    def merge(self, padding_top, padding_left, image):
+    def blit(self, padding_top, padding_left, image):
         """
-        Merges the two images, putting the image given on top of this image with with the given padding
+        Puts the image given on top of this image with the given padding
         """
         # there *must* be a better/faster way to do this:
         # TODO: check that palettes etc match.

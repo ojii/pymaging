@@ -160,7 +160,7 @@ Internal API
 
         This method operates **in place** and does not return a copy of this image!
 
-    .. method:: merge(padding_top, padding_left, image):
+    .. method:: blit(padding_top, padding_left, image):
 
         Draws the image passed in on top of this image at the location indicated with the padding.
 
