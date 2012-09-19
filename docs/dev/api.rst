@@ -60,6 +60,17 @@ Internal API
 
         :param fileobj: A string pointing at a image file.
 
+    .. classmethod:: new(width, height, background_color, mode, palette=None)
+
+        Creates a new image with a solid background color.
+
+        :param width: Width of the new image.
+        :param height: Height of the new image.
+        :param background_color: The color to use for the background. Must be an instance of
+                                 :class:`pymaging.colors.Color`.
+        :param mode: The color mode. Must be an instance of :class:`pymaging.colors.ColorType`.
+        :param palette: If given, the palette to use for the image.
+
     .. method:: save(fileobj, format)
 
         Saves the image.
@@ -146,6 +157,12 @@ Internal API
 
         This method is just a shortcut around :meth:`set_color` which allows users to write shape classes that do the
         heavy lifting for them.
+
+        This method operates **in place** and does not return a copy of this image!
+
+    .. method:: merge(padding_top, padding_left, image):
+
+        Draws the image passed in on top of this image at the location indicated with the padding.
 
         This method operates **in place** and does not return a copy of this image!
 
