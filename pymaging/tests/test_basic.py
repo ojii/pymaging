@@ -23,7 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from __future__ import absolute_import
-from pymaging.colors import Color
+from pymaging.colors import Color, RGBA
 from pymaging.exceptions import FormatNotSupported
 from pymaging.image import Image
 from pymaging.shapes import Line, Pixel
@@ -87,6 +87,17 @@ class BasicTests(PymagingBaseTestCase):
         color = Lime
         result = base.cover_with(color)
         self.assertEqual(result, Lime)
+
+    def test_new(self):
+        img = Image.new(5, 5, Black, RGBA)
+        self.assertImage(img, [
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            ])
+
 
 
 class DrawTests(PymagingBaseTestCase):

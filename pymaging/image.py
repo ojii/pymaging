@@ -23,11 +23,13 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import array
 from pymaging.colors import Color
 from pymaging.affine import AffineTransform
 from pymaging.exceptions import FormatNotSupported, InvalidColor
 from pymaging.formats import get_format, get_format_objects
 from pymaging.helpers import get_transformed_dimensions
+from pymaging.pixelarray import get_pixel_array
 from pymaging.resample import nearest
 import os
 
@@ -58,6 +60,12 @@ class Image(object):
     def open_from_path(cls, filepath):
         with open(filepath, 'rb') as fobj:
             return cls.open(fobj)
+
+    @classmethod
+    def new(cls, width, height, background_color, mode, palette=None):
+        color = background_color.to_pixel(mode.length)
+        pixel_array = get_pixel_array(array.array('B', color * width * height), width, height, mode.length)
+        return Image(pixel_array, mode, palette=palette)
 
     #==========================================================================
     # Saving
@@ -218,6 +226,8 @@ class Image(object):
         Merges the two images, putting the image given on top of this image with with the given padding
         """
         # there *must* be a better/faster way to do this:
+        # TODO: check that palettes etc match.
+        # TODO: fastpath this by copying the array if pixelsize is identical/palette is the same
         for x in range(min([image.width, self.width - padding_left])):
             for y in range(min([image.height, self.height- padding_top])):
                 self.set_color(padding_left + x, padding_top + y, image.get_color(x, y))
