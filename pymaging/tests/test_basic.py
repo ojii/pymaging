@@ -198,3 +198,47 @@ class DrawTests(PymagingBaseTestCase):
             [Black, White, Black, Black, Black],
             [Black, White, Black, Black, Black],
         ])
+
+    def test_merge_simple(self):
+        main = image_factory([
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+        ])
+        other =image_factory([
+            [White, White, White],
+            [White, White, White],
+            [White, White, White],
+        ])
+        main.merge(1, 1, other)
+        self.assertImage(main, [
+            [Black, Black, Black, Black, Black],
+            [Black, White, White, White, Black],
+            [Black, White, White, White, Black],
+            [Black, White, White, White, Black],
+            [Black, Black, Black, Black, Black],
+        ])
+
+    def test_merge_partial(self):
+        main = image_factory([
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+        ])
+        other =image_factory([
+            [White, White, White],
+            [White, White, White],
+            [White, White, White],
+        ])
+        main.merge(3, 3, other)
+        self.assertImage(main, [
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, Black, Black],
+            [Black, Black, Black, White, White],
+            [Black, Black, Black, White, White],
+        ])

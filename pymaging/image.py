@@ -212,3 +212,12 @@ class Image(object):
     def draw(self, shape, color):
         for x, y, pixelcolor in shape.iter_pixels(color):
             self.set_color(x, y, pixelcolor)
+
+    def merge(self, padding_top, padding_left, image):
+        """
+        Merges the two images, putting the image given on top of this image with with the given padding
+        """
+        # there *must* be a better/faster way to do this:
+        for x in range(min([image.width, self.width - padding_left])):
+            for y in range(min([image.height, self.height- padding_top])):
+                self.set_color(padding_left + x, padding_top + y, image.get_color(x, y))
