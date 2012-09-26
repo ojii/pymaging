@@ -210,7 +210,7 @@ class DrawTests(PymagingBaseTestCase):
             [Black, White, Black, Black, Black],
         ])
 
-    def test_merge_simple(self):
+    def test_blit_simple(self):
         main = image_factory([
             [Black, Black, Black, Black, Black],
             [Black, Black, Black, Black, Black],
@@ -223,7 +223,7 @@ class DrawTests(PymagingBaseTestCase):
             [White, White, White],
             [White, White, White],
         ])
-        main.merge(1, 1, other)
+        main.blit(1, 1, other)
         self.assertImage(main, [
             [Black, Black, Black, Black, Black],
             [Black, White, White, White, Black],
@@ -232,7 +232,7 @@ class DrawTests(PymagingBaseTestCase):
             [Black, Black, Black, Black, Black],
         ])
 
-    def test_merge_partial(self):
+    def test_blit_partial(self):
         main = image_factory([
             [Black, Black, Black, Black, Black],
             [Black, Black, Black, Black, Black],
@@ -245,7 +245,7 @@ class DrawTests(PymagingBaseTestCase):
             [White, White, White],
             [White, White, White],
         ])
-        main.merge(3, 3, other)
+        main.blit(3, 3, other)
         self.assertImage(main, [
             [Black, Black, Black, Black, Black],
             [Black, Black, Black, Black, Black],
