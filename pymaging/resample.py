@@ -73,8 +73,6 @@ class Resampler(object):
         new_array = source.pixels.copy()
 
         for y in y_range:
-            line = array.array('B')  # initialize a new line
-
             # the 0.5's mean we use the center of each pixel
             row_x0, row_y0 = transform * (0.5, y + 0.5)
             row_x1, row_y1 = transform * (width + 0.5, y + 0.5)
