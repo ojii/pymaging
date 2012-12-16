@@ -23,6 +23,8 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from abc import ABCMeta, abstractmethod
+
 from pymaging.pixelarray import get_pixel_array
 
 __all__ = ('nearest', 'bilinear', 'Resampler')
@@ -34,11 +36,11 @@ import array
 
 
 class Resampler(object):
-    def __init__(self):
-        if self.__class__ is Resampler:
-            raise NotImplementedError(
-                "%r is abstract, instantiate a subclass instead" % Resampler
-            )
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def _get_value(self, source, source_x, source_y, dx, dy):
+        pass
 
     def affine(self, source, transform, resize_canvas=True):
         if resize_canvas:
@@ -99,6 +101,7 @@ class Resampler(object):
 
 
 class Nearest(Resampler):
+
     def _get_value(self, source, source_x, source_y, dx, dy):
         if source_x < 0 or source_y < 0 or \
                     source_x >= source.width or source_y >= source.height:
@@ -132,6 +135,7 @@ class Nearest(Resampler):
 
 
 class Bilinear(Resampler):
+
     def _get_value(self, source, source_x, source_y, dx, dy):
         if source_x < 0 or source_y < 0 or \
                     source_x >= source.width or source_y >= source.height:
