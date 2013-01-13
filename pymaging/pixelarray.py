@@ -53,11 +53,11 @@ class GenericPixelArray(object):
         """
         Flip the lines from top to bottom into a new copy of this pixel array
         """
-        newarr = array.array('B', [0] *  self.size)
+        newarr = array.array('B', [0]) *  self.size
         for i in range(self.height):
             dst_start = i * self.line_length
             dst_end = dst_start + self.line_length
-            src_start = (self.height - i) * self.line_length
+            src_start = ((self.height - i) * self.line_length) - self.line_length
             src_end = src_start + self.line_length
             newarr[dst_start:dst_end] = self.data[src_start:src_end]
         return get_pixel_array(newarr, self.width, self.height, self.pixelsize)
@@ -66,12 +66,12 @@ class GenericPixelArray(object):
         """
         Flip the lines from left to right into a new copy of this pixel array
         """
-        new_pixel_array = get_pixel_array(array.array('B', [0] *  self.size), self.width, self.height, self.pixelsize)
-        for dst_y in range(self.height):
-            src_y = self.height - dst_y - 1
+        new_pixel_array = get_pixel_array(array.array('B', [0]) *  self.size, 
+                                          self.width, self.height, self.pixelsize)
+        for y in range(self.height):
             for dst_x in range(self.width):
                 src_x = self.width - dst_x - 1
-                new_pixel_array.set(dst_x, dst_y, self.get(src_x, src_y))
+                new_pixel_array.set(dst_x, y, self.get(src_x, y))
         return new_pixel_array
 
     def copy(self):
