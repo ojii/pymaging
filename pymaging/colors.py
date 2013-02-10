@@ -34,7 +34,7 @@ def _mixin_alpha(colors, alpha):
 class Color(object):
     __slots__ = 'red', 'green', 'blue', 'alpha'
 
-    def __init__(self, red, green, blue, alpha):
+    def __init__(self, red, green, blue, alpha=255):
         self.red = red
         self.green = green
         self.blue = blue
@@ -63,10 +63,7 @@ class Color(object):
         Convert a pixel (list of 3-4 values) to a Color instance.
         """
         assert len(pixel) in (3,4), "Color.from_pixel only supports 3 and 4 value pixels"
-        pixel = list(pixel)
-        if len(pixel) == 3:
-            pixel.append(255)
-        return cls(*map(int,pixel))
+        return cls(*map(int, list(pixel)))
 
     @classmethod
     def from_hexcode(cls, hexcode):
@@ -77,8 +74,6 @@ class Color(object):
         assert len(hexcode) in (3,4,6,8), "Hex codes must be 3, 4, 6 or 8 characters long"
         if len(hexcode) in (3,4):
             hexcode = ''.join(x*2 for x in hexcode)
-        if len(hexcode) == 6:
-            hexcode += 'ff'
         return cls(*[int(''.join(x), 16) for x in zip(hexcode[::2], hexcode[1::2])])
 
     def get_for_brightness(self, brightness):
