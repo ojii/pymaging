@@ -47,7 +47,7 @@ class Color(object):
         return '<%s>' % self
 
     def __hash__(self):
-        return hash(self.to_hexcode())
+        return hash((self.red, self.green, self.blue, self.alpha))
 
     def __eq__(self, other):
         return (
