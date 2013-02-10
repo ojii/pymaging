@@ -32,6 +32,8 @@ def _mixin_alpha(colors, alpha):
     return [int(round(color *  ratio)) for color in colors]
 
 class Color(object):
+    __slots__ = 'red', 'green', 'blue', 'alpha'
+
     def __init__(self, red, green, blue, alpha):
         self.red = red
         self.green = green
