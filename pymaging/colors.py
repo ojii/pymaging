@@ -23,12 +23,12 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from __future__ import division
 from collections import namedtuple
-from pymaging.utils import fdiv
 
 
 def _mixin_alpha(colors, alpha):
-    ratio = fdiv(alpha, 255)
+    ratio = alpha / 255
     return [int(round(color *  ratio)) for color in colors]
 
 class Color(object):
@@ -93,8 +93,8 @@ class Color(object):
         if cover_color.alpha == 255:
             return Color(cover_color.red, cover_color.green, cover_color.blue, cover_color.alpha)
 
-        srca = fdiv(cover_color.alpha, 255)
-        dsta = fdiv(self.alpha, 255)
+        srca = cover_color.alpha / 255
+        dsta = self.alpha / 255
         outa = srca + dsta * (1 - srca)
 
         srcr, srcg, srcb = cover_color.red, cover_color.green, cover_color.blue
