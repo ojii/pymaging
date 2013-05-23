@@ -64,7 +64,7 @@ class Image(object):
     @classmethod
     def new(cls, width, height, background_color, mode, palette=None):
         color = background_color.to_pixel(mode.length)
-        pixel_array = get_pixel_array(array.array('B', color * width * height), width, height, mode.length)
+        pixel_array = get_pixel_array(array.array('B', color) * width * height, width, height, mode.length)
         return Image(pixel_array, mode, palette=palette)
 
     #==========================================================================
