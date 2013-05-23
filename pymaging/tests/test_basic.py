@@ -54,11 +54,21 @@ class BasicTests(PymagingBaseTestCase):
 
     def test_flip_left_right(self):
         img = self._get_fake_image()
-        img.flip_left_right()
+        l2r = img.flip_left_right()
+        self.assertImage(l2r, [
+            [Blue, Green, Red],
+            [Red, Blue, Green],
+            [Green, Red, Blue],
+        ])
 
     def test_flip_top_bottom(self):
         img = self._get_fake_image()
-        img.flip_top_bottom()
+        t2b = img.flip_top_bottom()
+        self.assertImage(t2b, [
+            [Blue, Red, Green],
+            [Green, Blue, Red],
+            [Red, Green, Blue],
+        ])
 
     def test_get_pixel(self):
         img = self._get_fake_image()
