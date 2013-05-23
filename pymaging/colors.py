@@ -23,16 +23,18 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from __future__ import division
 from collections import namedtuple
-from pymaging.utils import fdiv
 
 
 def _mixin_alpha(colors, alpha):
-    ratio = fdiv(alpha, 255)
+    ratio = alpha / 255
     return [int(round(color *  ratio)) for color in colors]
 
 class Color(object):
-    def __init__(self, red, green, blue, alpha):
+    __slots__ = 'red', 'green', 'blue', 'alpha'
+
+    def __init__(self, red, green, blue, alpha=255):
         self.red = red
         self.green = green
         self.blue = blue
@@ -45,7 +47,7 @@ class Color(object):
         return '<%s>' % self
 
     def __hash__(self):
-        return hash(self.to_hexcode())
+        return hash((self.red, self.green, self.blue, self.alpha))
 
     def __eq__(self, other):
         return (
@@ -61,10 +63,7 @@ class Color(object):
         Convert a pixel (list of 3-4 values) to a Color instance.
         """
         assert len(pixel) in (3,4), "Color.from_pixel only supports 3 and 4 value pixels"
-        pixel = list(pixel)
-        if len(pixel) == 3:
-            pixel.append(255)
-        return cls(*map(int,pixel))
+        return cls(*map(int, list(pixel)))
 
     @classmethod
     def from_hexcode(cls, hexcode):
@@ -75,8 +74,6 @@ class Color(object):
         assert len(hexcode) in (3,4,6,8), "Hex codes must be 3, 4, 6 or 8 characters long"
         if len(hexcode) in (3,4):
             hexcode = ''.join(x*2 for x in hexcode)
-        if len(hexcode) == 6:
-            hexcode += 'ff'
         return cls(*[int(''.join(x), 16) for x in zip(hexcode[::2], hexcode[1::2])])
 
     def get_for_brightness(self, brightness):
@@ -96,8 +93,8 @@ class Color(object):
         if cover_color.alpha == 255:
             return Color(cover_color.red, cover_color.green, cover_color.blue, cover_color.alpha)
 
-        srca = fdiv(cover_color.alpha, 255)
-        dsta = fdiv(self.alpha, 255)
+        srca = cover_color.alpha / 255
+        dsta = self.alpha / 255
         outa = srca + dsta * (1 - srca)
 
         srcr, srcg, srcb = cover_color.red, cover_color.green, cover_color.blue
