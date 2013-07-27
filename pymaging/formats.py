@@ -26,7 +26,7 @@
 from collections import namedtuple
 import threading
 
-Format = namedtuple('Format', 'decode encode extensions')
+Format = namedtuple('Format', 'open save extensions')
 
 
 
