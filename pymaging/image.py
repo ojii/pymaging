@@ -34,15 +34,31 @@ from pymaging.resample import nearest
 import os
 
 
+
 class Image(object):
-    def __init__(self, pixelarray, mode, palette=None):
+    def __init__(self, mode, width, height, loader, meta=None):
         self.mode = mode
-        self.palette = palette
+        self.width = width
+        self.height = height
+        self.loader = loader
+        self.meta = meta
+        self._pixelarray = None
+        self._palette = None
         self.reverse_palette = None
-        self.pixels = pixelarray
-        self.width = self.pixels.width
-        self.height = self.pixels.height
-        self.pixelsize = self.pixels.pixelsize
+
+    @property
+    def pixels(self):
+        self.load()
+        return self._pixelarray
+
+    @property
+    def pixelsize(self):
+        return self.pixels.pixelsize
+
+    @property
+    def palette(self):
+        self.load()
+        return self._palette
 
     #==========================================================================
     # Constructors
@@ -51,7 +67,7 @@ class Image(object):
     @classmethod
     def open(cls, fileobj):
         for format in get_format_objects():
-            image = format.decode(fileobj)
+            image = format.open(fileobj)
             if image:
                 return image
         raise FormatNotSupported()
@@ -62,10 +78,15 @@ class Image(object):
             return cls.open(fobj)
 
     @classmethod
-    def new(cls, width, height, background_color, mode, palette=None):
+    def new(cls, mode, width, height, background_color, palette=None, meta=None):
         color = background_color.to_pixel(mode.length)
         pixel_array = get_pixel_array(array.array('B', color) * width * height, width, height, mode.length)
-        return Image(pixel_array, mode, palette=palette)
+        return LoadedImage(mode, width, height, pixel_array, palette=palette, meta=meta)
+
+    def load(self):
+        if self._pixelarray is not None:
+            return
+        self._pixelarray, self._palette = self.loader()
 
     #==========================================================================
     # Saving
@@ -75,7 +96,7 @@ class Image(object):
         format_object = get_format(format)
         if not format_object:
             raise FormatNotSupported(format)
-        format_object.encode(self, fileobj)
+        format_object.save(self, fileobj)
 
     def save_to_path(self, filepath, format=None):
         if not format:
@@ -101,6 +122,18 @@ class Image(object):
             color_obj.to_hexcode()
             self.reverse_palette[color_obj] = index
 
+    def _copy(self, pixels, **kwargs):
+        defaults = {
+            'mode': self.mode,
+            'width': self.width,
+            'height': self.height,
+            'palette': self.palette,
+            'meta': self.meta,
+        }
+        defaults.update(kwargs)
+        defaults['pixels'] = pixels
+        return LoadedImage(**defaults)
+
     #==========================================================================
     # Geometry Operations
     #==========================================================================
@@ -109,11 +142,7 @@ class Image(object):
         pixels = resample_algorithm.resize(
             self, width, height, resize_canvas=resize_canvas
         )
-        return Image(
-            pixels,
-            self.mode,
-            self.palette,
-        )
+        return self._copy(pixels)
 
     def affine(self, transform, resample_algorithm=nearest, resize_canvas=True):
         """
@@ -125,11 +154,7 @@ class Image(object):
             transform,
             resize_canvas=resize_canvas,
         )
-        return Image(
-            pixels,
-            self.mode,
-            self.palette,
-        )
+        return self._copy(pixels)
 
     def rotate(self, degrees, clockwise=False, resample_algorithm=nearest, resize_canvas=True):
         """
@@ -150,11 +175,8 @@ class Image(object):
         transform = transform.translate(width * 0.5, height * 0.5)
 
         pixels = resample_algorithm.affine(self, transform, resize_canvas=resize_canvas)
-        return Image(
-            pixels,
-            self.mode,
-            self.palette,
-        )
+
+        return self._copy(pixels)
 
     def get_pixel(self, x, y):
         try:
@@ -185,21 +207,14 @@ class Image(object):
         """
         Vertically flips the pixels of source into target
         """
-        return Image(
-            self.pixels.copy_flipped_top_bottom(),
-            self.mode,
-            self.palette,
-        )
+        pixels = self.pixels.copy_flipped_top_bottom()
+        return self._copy(pixels)
 
     def flip_left_right(self):
         """
         Horizontally flips the pixels of source into target
         """
-        return Image(
-            self.pixels.copy_flipped_left_right(),
-            self.mode,
-            self.palette,
-        )
+        return self._copy(pixels=self.pixels.copy_flipped_left_right())
 
     def crop(self, width, height, padding_top, padding_left):
         new_pixels = self.pixels.copy()
@@ -207,11 +222,7 @@ class Image(object):
         new_pixels.remove_lines(height, new_pixels.height - height)
         new_pixels.remove_columns(0, padding_left)
         new_pixels.remove_columns(width, new_pixels.width - width)
-        return Image(
-            new_pixels,
-            self.mode,
-            self.palette,
-        )
+        return self._copy(new_pixels, width=width, height=height)
 
     #==========================================================================
     # Manipulation
@@ -231,3 +242,17 @@ class Image(object):
         for x in range(min([image.width, self.width - padding_left])):
             for y in range(min([image.height, self.height- padding_top])):
                 self.set_color(padding_left + x, padding_top + y, image.get_color(x, y))
+
+
+
+class LoadedImage(Image):
+    def __init__(self, mode, width, height, pixels, palette=None, meta=None):
+        self.mode = mode
+        self.width = width
+        self.height = height
+        self.format = format
+        self.loader = lambda:None
+        self.meta = meta
+        self._pixelarray = pixels
+        self._palette = palette
+        self.reverse_palette = None

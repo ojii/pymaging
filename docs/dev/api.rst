@@ -10,14 +10,18 @@ Internal API
 *********************
 
 
-.. class:: Image(pixelarray, mode, palette=None)
+.. class:: Image(mode, width, height, loader, meta=None)
 
     The image class. This is the core class of pymaging.
 
-    :param pixelarray: An instance of :class:`pymaging.pixelarray.GenericPixelArray` or a subclass of it.
     :param mode: The color mode. A :class:`pymaging.colors.ColorType` instance.
-    :param palette: If given, this will be the color palette used by the image. A list of :class:`pymaging.colors.Color`
-                    instances.
+    :param width: Width of the image (in pixels).
+    :param height: Height of the image (in pixels).
+    :param loader: A callable which when called returns a tuple containing a
+                   :class:`pymaging.pixelarray.GenericPixelArray` instance and a palette (which can be ``None``). If you
+                   already have all the pixels for your image loaded, use :class:`pymaging.image.LoadedImage` instead.
+    :param meta: Any further information your format wants to pass along. Your format should document what users can
+                 expect in ``meta``.
 
     .. attribute:: mode
 
@@ -60,16 +64,18 @@ Internal API
 
         :param fileobj: A string pointing at a image file.
 
-    .. classmethod:: new(width, height, background_color, mode, palette=None)
+    .. classmethod:: new(mode, width, height, background_color, palette=None, meta=None)
 
         Creates a new image with a solid background color.
 
+        :param mode: The color mode. Must be an instance of :class:`pymaging.colors.ColorType`.
         :param width: Width of the new image.
         :param height: Height of the new image.
         :param background_color: The color to use for the background. Must be an instance of
                                  :class:`pymaging.colors.Color`.
-        :param mode: The color mode. Must be an instance of :class:`pymaging.colors.ColorType`.
         :param palette: If given, the palette to use for the image.
+        :param meta: Any further information your format wants to pass along. Your format should document what users can
+                     expect in ``meta``.
 
     .. method:: save(fileobj, format)
 
@@ -95,6 +101,16 @@ Internal API
 
         Populates the reverse palette, which is a mapping of :class:`pymaging.colors.Color` instances to their index in
         the palette. Sets :attr:`reverse_palette`.
+
+    .. method:: _copy(pixles, **kwargs)
+
+        Creates a copy of this instances meta information, but setting pixel array to ``pixels``. ``kwargs`` can
+        override any argument to the :class:`pymaging.image.LoadedImage` constructor. By default the values of this
+        image are used.
+
+        This method is mostly used by other APIs that return a new copy of the image.
+
+        Returns a :class:`pymaging.image.LoadedImage`.
 
     .. method:: resize(width, height, resample_algorithm=nearest, resize_canvas=True)
 
@@ -165,6 +181,13 @@ Internal API
         Draws the image passed in on top of this image at the location indicated with the padding.
 
         This method operates **in place** and does not return a copy of this image!
+
+
+.. class:: LoadedImage(mode, width, height, pixels, palette=None, meta=None)
+
+    Subclass of :class:`pymaging.image.Image` if you already have all pixels loaded. All parameters are the same as in
+    :class:`pymaging.image.Image` except for ``loader`` which is replaced with ``pixels``. ``pixels`` must be an
+    instance of :class:`pymaging.pixelarray.GenericPixelArray` or a subclass thereof.
 
 
 .. module:: pymaging.affine
@@ -300,13 +323,13 @@ Internal API
 
 Loads and maintains the formats supported in this installation.
 
-.. class:: Format(decode, encode, extensions)
+.. class:: Format(open, save, extensions)
 
-    A named tuple that should be used to define formats for pymaging. ``decode`` and ``encode`` are callables that
+    A named tuple that should be used to define formats for pymaging. ``open`` and ``save`` are callables that
     decode and encode an image in this format. ``extensions`` is a list of file extensions this image type could have.
 
-    .. attribute:: decode
-    .. attribute:: encode
+    .. attribute:: open
+    .. attribute:: save
     .. attribute:: extensions
 
 .. class:: FormatRegistry

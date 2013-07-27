@@ -25,9 +25,10 @@
 from __future__ import absolute_import
 from pymaging.colors import Color, RGBA
 from pymaging.exceptions import FormatNotSupported
+from pymaging.formats import register, Format
 from pymaging.image import Image
 from pymaging.shapes import Line, Pixel
-from pymaging.test_utils import PymagingBaseTestCase, image_factory
+from pymaging.test_utils import PymagingBaseTestCase, image_factory, pixel_array_factory
 from pymaging.webcolors import Red, Green, Blue, Black, White, Lime
 try: # pragma: no-cover
     # 2.x
@@ -99,7 +100,7 @@ class BasicTests(PymagingBaseTestCase):
         self.assertEqual(result, Lime)
 
     def test_new(self):
-        img = Image.new(5, 5, Black, RGBA)
+        img = Image.new(RGBA, 5, 5, Black)
         self.assertImage(img, [
             [Black, Black, Black, Black, Black],
             [Black, Black, Black, Black, Black],
@@ -263,3 +264,44 @@ class DrawTests(PymagingBaseTestCase):
             [Black, Black, Black, White, White],
             [Black, Black, Black, White, White],
         ])
+
+    def test_delayed_loading(self):
+        pixel_array = pixel_array_factory([
+            [Black]
+        ])
+        class Loader(object):
+            def __init__(self):
+                self.callcount = 0
+
+            def __call__(self):
+                self.callcount += 1
+                return pixel_array, None
+        loader = Loader()
+        image = Image(RGBA, 1, 1, loader)
+        self.assertEqual(loader.callcount, 0)
+        image.set_color(0, 0, White)
+        self.assertEqual(loader.callcount, 1)
+        image.flip_left_right()
+        self.assertEqual(loader.callcount, 1)
+
+    def test_format_registration(self):
+        def loader():
+            return pixel_array_factory([[Black]]), None
+        def open_image(fobj):
+            return Image(
+                RGBA,
+                1,
+                1,
+                loader,
+            )
+        def save_image(image, fobj):
+            fobj.write('saved')
+        register(Format(open_image, save_image, ['test']))
+        img = Image.open(StringIO())
+        self.assertIsInstance(img, Image)
+        self.assertEqual(img.width, 1)
+        self.assertEqual(img.height, 1)
+        self.assertEqual(img.get_color(0, 0), Black)
+        sio = StringIO()
+        img.save(sio, 'test')
+        self.assertEqual(sio.getvalue(), 'saved')

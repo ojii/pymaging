@@ -9,14 +9,29 @@ Overview
 About Image objects
 *******************
 
-Constructing :class:`pymaging.image.Image` objects
-==================================================
 
-:class:`pymaging.image.Image` takes a pixel array, a mode and optionally a palette as arguments. The pixel array should
-be constructed with :func:`pymaging.pixelarray.get_pixel_array`. Mode should be an instance of
-:class:`pymaging.colors.ColorType`. The palette, if given, indicates that the image uses a palette to lookup colors.
-This that each pixel in the pixel array is actually an index into the palette, which should be a list of
-:class:`pymaging.colors.Color` instances.
+:class:`pymaging.image.Image` vs :class:`pymaging.image.LoadedImage`
+====================================================================
+
+There are two main classes for representing an image in pymaging, :class:`pymaging.image.Image` and
+:class:`pymaging.image.LoadedImage`. Other than their constructor their APIs are the same. The difference is that
+:class:`pymaging.image.Image` didn't load all the image data from the file yet, whereas
+:class:`pymaging.image.LoadedImage` did. As a general rule, any format should use :class:`pymaging.image.Image` so
+opening an image will first load it's metadata (width, height) before loading all the pixel data (which can consume
+large amounts of memory). This is useful for users who just want to verify that what they have is an image supported by
+pymaging and maybe want to know the dimensions of the image before loading it.
+
+:class:`pymaging.image.LoadedImage` should only be used if you have all the pixel data in memory anyway or if there's no
+way around loading all the data at first, as it's required to extract the meta information.
+
+
+About loaders
+=============
+
+:class:`pymaging.image.Image` takes a loader callable which will be called to actually load the image data. This loader
+should return a tuple ``(pixel_array, palette)``. ``pixel_array` should be constructed with
+:func:`pymaging.pixelarray.get_pixel_array`, whereas ``palette`` should either be a palette (list of colors) or
+``None``.
 
 
 ************
