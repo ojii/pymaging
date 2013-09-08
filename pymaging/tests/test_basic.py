@@ -305,3 +305,4 @@ class DrawTests(PymagingBaseTestCase):
         sio = StringIO()
         img.save(sio, 'test')
         self.assertEqual(sio.getvalue(), 'saved')
+

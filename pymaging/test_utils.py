@@ -25,7 +25,18 @@ def image_factory(colors, alpha=True):
     return Image(ColorType(pixel_size, alpha), width, height, loader)
 
 
-class PymagingBaseTestCase(unittest.TestCase):
+if hasattr(unittest.TestCase, 'assertIsInstance'):
+    class _Compat: pass
+else:
+    class _Compat:
+        def assertIsInstance(self, obj, cls, msg=None):
+            if not isinstance(obj, cls):
+                standardMsg = '%s is not an instance of %r' % (safe_repr(obj), cls)
+                self.fail(self._formatMessage(msg, standardMsg))
+
+
+class PymagingBaseTestCase(unittest.TestCase, _Compat):
     def assertImage(self, img, colors, alpha=True):
         check = image_factory(colors, alpha)
         self.assertEqual(img.pixels, check.pixels)
+
